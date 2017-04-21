@@ -59,8 +59,8 @@ Settings::Settings()
 void Settings::loadDefaults()
 {
     setLibraryName("Java SE 7");
-    setDocUrl("https://docs.oracle.com/javase/7/docs/api/");
-    setSearchEngineUrl("https://www.google.com/search?q=");
+    setDocUrl("http://docs.oracle.com/javase/7/docs/api/");
+    setSearchEngineUrl("http://www.baidu.com/s?wd=");
 }
 
 Settings* Settings::_instance = 0;
