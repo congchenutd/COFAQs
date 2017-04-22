@@ -10,7 +10,7 @@ public:
     static Settings* getInstance();
 
     QString getServerIP()               const;
-    uint    getServerPort()             const;
+    quint16 getServerPort()             const;
     double  getSimilarityThreshold()    const;  // 判断两个句子是否是语义一致的阈值
 
     void setServerIP            (const QString& ip);

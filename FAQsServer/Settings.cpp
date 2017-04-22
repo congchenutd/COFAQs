@@ -10,8 +10,8 @@ Settings* Settings::getInstance()
     return _instance;
 }
 
-QString Settings::getServerIP()   const { return value("IP")    .toString(); }
-uint    Settings::getServerPort() const { return value("Port")  .toUInt();   }
+QString Settings::getServerIP()   const { return value("IP").toString(); }
+quint16 Settings::getServerPort() const { return static_cast<quint16>(value("Port").toUInt()); }
 double  Settings::getSimilarityThreshold()  const { return value("SimilarityThreshold").toDouble(); }
 
 void Settings::setServerIP  (const QString& ip) { setValue("IP", ip); }
