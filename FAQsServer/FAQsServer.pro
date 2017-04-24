@@ -12,9 +12,14 @@ TEMPLATE = app
 INCLUDEPATH += $$PWD/include
 
 win32 {
-#    debug: LIBS += -L$$PWD/lib/ -lqhttpserverd
-#    else:  LIBS += -L$$PWD/lib/ -lqhttpserver
-} else {
+    CONFIG(release, debug|release) {
+        LIBS += -L$$PWD/lib/ -lqhttp
+    }
+    CONFIG(debug, debug|release) {
+        LIBS += -L$$PWD/lib/ -lqhttpd
+    }
+}
+else {
     LIBS += -L$$PWD/lib -lqhttp
 }
 
