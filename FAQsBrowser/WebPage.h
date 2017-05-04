@@ -20,7 +20,7 @@ public slots:
 
 private slots:
     void onQueryReply(const QJsonObject& joDocPage);
-    void onSslErrors(QNetworkReply* reply, const QList<QSslError>& errors);
+    void onSslErrors(QNetworkReply* reply);
 
 protected:
     bool acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& request, NavigationType type);
