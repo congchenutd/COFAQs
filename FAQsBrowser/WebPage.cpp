@@ -14,6 +14,7 @@
 #include <QWebElement>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QNetworkReply>
 
 WebPage::WebPage(QObject* parent)
     : QWebPage(parent)
@@ -23,6 +24,7 @@ WebPage::WebPage(QObject* parent)
     connect(this, SIGNAL(loadFinished(bool)), this, SLOT(requestFAQs()));
     connect(Connection::getInstance(), SIGNAL(queryReply(QJsonObject)),
             this, SLOT(onQueryReply(QJsonObject)));
+    connect(networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, QList<QSslError>)), SLOT(onSslErrors(QNetworkReply*)));
 }
 
 void WebPage::requestFAQs()
@@ -47,6 +49,10 @@ void WebPage::onQueryReply(const QJsonObject& joDocPage)
         QJsonObject joAPI = (*it).toObject();
         _visitor->addFAQ(this, joAPI);
     }
+}
+
+void WebPage::onSslErrors(QNetworkReply* reply) {
+    reply->ignoreSslErrors();
 }
 
 bool WebPage::acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& request, NavigationType type)

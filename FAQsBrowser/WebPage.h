@@ -1,6 +1,7 @@
 #ifndef WEBPAGE_H
 #define WEBPAGE_H
 
+#include <QSslError>
 #include <QWebPage>
 
 class IDocVisitor;
@@ -19,6 +20,7 @@ public slots:
 
 private slots:
     void onQueryReply(const QJsonObject& joDocPage);
+    void onSslErrors(QNetworkReply* reply, const QList<QSslError>& errors);
 
 protected:
     bool acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& request, NavigationType type);
