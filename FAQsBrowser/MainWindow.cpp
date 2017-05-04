@@ -26,7 +26,6 @@ MainWindow::MainWindow(QWidget *parent) :
     layout->addWidget(_tabWidget);
     centralWidget->setLayout(layout);
     setCentralWidget(centralWidget);
-    ui.toolBarSearch->hide();
 
     QWebSettings::setIconDatabasePath(".");
     QWebSettings::globalSettings()->setAttribute(QWebSettings::PluginsEnabled,    true);
@@ -86,6 +85,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(_tabWidget, SIGNAL(historyChanged()),               this, SLOT(onHistoryChanged()));
     connect(_tabWidget, SIGNAL(linkHovered(QString)), statusBar(), SLOT(showMessage(QString)));
     connect(_tabWidget, SIGNAL(tabCloseRequested(int)),         this, SLOT(saveUnansweredQuestion(int)));
+
+    ui.actionShowSearch->toggle();
 }
 
 WebView* MainWindow::newTab(WebView::PageRole role) {
@@ -125,12 +126,12 @@ void MainWindow::onDocPage() {
 
 void MainWindow::onZoomIn() {
     if(WebView* webView = currentWebView())
-        webView->setZoomFactor(webView->zoomFactor() + 0.1);
+        webView->setZoomFactor(webView->zoomFactor() + 0.2);
 }
 
 void MainWindow::onZoomOut() {
     if(WebView* webView = currentWebView())
-        webView->setZoomFactor(webView->zoomFactor() - 0.1);
+        webView->setZoomFactor(webView->zoomFactor() - 0.2);
 }
 
 void MainWindow::onZoomReset() {
