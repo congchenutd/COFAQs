@@ -1,9 +1,8 @@
-#include "TextEditToQIODeviceAdapter.h"
+﻿#include "TextEditToQIODeviceAdapter.h"
 #include "Window.h"
 
 #include <QMenu>
 #include <QMessageBox>
-#include <QSystemTrayIcon>
 #include <QCloseEvent>
 #include "DAO.h"
 
@@ -29,8 +28,9 @@ Window::Window(QWidget* parent) :
     _tray->setContextMenu(menu);
     _tray->show();
 
-    connect(ui.btClose, SIGNAL(clicked()), SLOT(hide()));
-    connect(ui.btQuit,  SIGNAL(clicked()), SLOT(onQuit()));
+    connect(ui.btClose, &QPushButton::clicked,          this, &Window::hide);
+    connect(ui.btQuit,  &QPushButton::clicked,          this, &Window::onQuit);
+    connect(_tray,      &QSystemTrayIcon::activated,    this, &Window::onTrayActivated);
 
     Logger* logger = new Logger(new TextEditToQIODeviceAdapter(ui.teLog, this));
     DAO::getInstance()->setLogger(logger);
@@ -63,4 +63,10 @@ void Window::onQuit()
         show();
         hide();
     }
+}
+
+void Window::onTrayActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    if (reason == QSystemTrayIcon::DoubleClick)
+        show();
 }

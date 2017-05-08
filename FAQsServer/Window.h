@@ -1,10 +1,9 @@
-#ifndef WINDOW_H
+﻿#ifndef WINDOW_H
 #define WINDOW_H
 
 #include "ui_Window.h"
 #include <QTextEdit>
-
-class QSystemTrayIcon;
+#include <QSystemTrayIcon>
 
 class Window: public QWidget
 {
@@ -18,6 +17,7 @@ protected:
 
 private slots:
     void onQuit();
+    void onTrayActivated(QSystemTrayIcon::ActivationReason reason);
 
 private:
     Ui::Window ui;
