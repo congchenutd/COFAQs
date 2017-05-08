@@ -1,10 +1,9 @@
 cache()
 TARGET = FAQsServer
 
-QT += network sql
+QT += gui network sql widgets
 
-CONFIG += console c++11
-CONFIG -= app_bundle
+CONFIG += c++11
 
 TEMPLATE = app
 
@@ -29,11 +28,22 @@ SOURCES = \
     Template.cpp \
     SnippetCreator.cpp \
     Settings.cpp \
-    ClientHandler.cpp
+    ClientHandler.cpp \
+    Window.cpp \
+    TextEditToQIODeviceAdapter.cpp
 HEADERS = \
     DAO.h \
     SimilarityComparer.h \
     Template.h \
     SnippetCreator.h \
     Settings.h \
-    ClientHandler.h
+    ClientHandler.h \
+    Window.h \
+    Logger.h \
+    TextEditToQIODeviceAdapter.h
+
+FORMS += \
+    Window.ui
+
+RESOURCES += \
+    Resources.qrc

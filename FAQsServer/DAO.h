@@ -2,6 +2,7 @@
 #define DAO_H
 
 #include <QObject>
+#include "Logger.h"
 
 class QJsonDocument;
 class SimilarityComparer;
@@ -13,6 +14,8 @@ class DAO : public QObject
 
 public:
     static DAO* getInstance();
+
+    void setLogger(Logger* logger);
 
     // save a QA pair or just a question
     void save(const QString& userName, const QString& email, const QString& apiSig,
@@ -76,8 +79,9 @@ private:
     QString getCurrentDateTime() const;
 
 private:
-    static DAO* _instance;
+    static DAO*         _instance;
     SimilarityComparer* _comparer;
+    Logger*             _logger;
 };
 
 #endif // DAO_H

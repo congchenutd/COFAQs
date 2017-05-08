@@ -8,7 +8,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QDebug>
+//#include <QDebug>
 #include <QStringList>
 #include <QDateTime>
 #include <QSettings>
@@ -22,6 +22,8 @@ DAO* DAO::getInstance()
         _instance = new DAO;
     return _instance;
 }
+
+void DAO::setLogger(Logger* logger) { _logger = logger; }
 
 DAO::DAO()
 {
@@ -346,7 +348,7 @@ void DAO::save(const QString& userName, const QString& email, const QString& api
     updateAnswerToQuestion  (questionID,    answerID);
     updateUserProvideAnswer (userID,        answerID);
 
-    qDebug() << "Save Q&A: " << userName << email << apiSig << question << link << title;
+    *_logger << "Save Q&A: " << userName << email << apiSig << question << link << title << endl;
 }
 
 /**
@@ -361,7 +363,7 @@ void DAO::logDocumentReading(const QString& userName, const QString& email, cons
     updateAPI (apiSig);
     addUserReadDocument(getUserID(userName), getAPIID(apiSig));
 
-    qDebug() << "Log document reading: " << userName << email << apiSig;
+    *_logger << "Log document reading: " << userName << email << apiSig << endl;
 }
 
 /**
@@ -375,7 +377,7 @@ void DAO::logAnswerClicking(const QString& userName, const QString& email, const
     updateUser(userName, email);
     addUserClickAnswer(getUserID(userName), getAnswerID(link));
 
-    qDebug() << "Log answer clicking: " << userName << email << link;
+    *_logger << "Log answer clicking: " << userName << email << link << endl;
 }
 
 /**
@@ -467,7 +469,7 @@ QJsonDocument DAO::queryFAQs(const QString& classSig) const
         }
     }
 
-    qDebug() << "Log query: " << apisJson;
+//    *_logger << "Log query: " << apisJson;
 
     return QJsonDocument(apisJson);
 }
@@ -567,7 +569,7 @@ QJsonObject DAO::createQuestionJson(int leadID) const
 
         result.insert("users",   createUsersJson  (questionIDs));
         result.insert("answers", createAnswersJson(questionIDs));
-        qDebug() << result;
+//        *_logger << result;
     }
 
     return result;
@@ -658,6 +660,6 @@ QJsonDocument DAO::queryUserProfile(const QString& userName) const
     }
     profileJson.insert("relatedusers", usersJson);   // add related users
 
-    qDebug() << "Query user profile: " << userName;
+    *_logger << "Query user profile: " << userName << endl;
     return QJsonDocument(profileJson);
 }
