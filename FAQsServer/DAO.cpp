@@ -12,6 +12,7 @@
 #include <QStringList>
 #include <QDateTime>
 #include <QSettings>
+#include <QSqlError>
 
 DAO* DAO::_instance = 0;
 
@@ -67,6 +68,10 @@ DAO::DAO()
                 QuestionID int references Questions(ID) on delete cascade on update cascade, \
                 Time       varchar, \
                 primary key (UserID, QuestionID, Time))");
+    query.exec("create table UserProvideAnswer ( \
+                UserID      int references Users    (ID) on delete cascade on update cascade, \
+                AnswerID    int references Answers  (ID) on delete cascade on update cascade, \
+                primary key (UserID, AnswerID))");
 
     _comparer = new SimilarityComparer(this);
     connect(_comparer, SIGNAL(comparisonResult  (QString,QString,qreal)),
@@ -276,46 +281,41 @@ void DAO::updateAnswer(const QString& link, const QString& title)
     query.exec();
 }
 
-void DAO::updateQuestionUserRelation(int groupID, int userID)
+void DAO::updateRelationship(const QString& tableName,
+                             const QString& key1, int value1,
+                             const QString& key2, int value2)
 {
-    if(groupID < 0 || userID < 0)
+    if(value1 < 0 || value2 < 0)
         return;
 
     QSqlQuery query;
-    query.exec(tr("delete from UserAskQuestion where GroupID = %1 and UserID = %2")
-               .arg(groupID)
-               .arg(userID));
-    query.exec(tr("insert into UserAskQuestion values (%1, %2)")
-               .arg(groupID)
-               .arg(userID));
+    query.exec(tr("delete from %1 where %2 = %3 and %4 = %5")
+                  .arg(tableName)
+                  .arg(key1)
+                  .arg(value1)
+                  .arg(key2)
+                  .arg(value2));
+
+    query.exec(tr("insert into %1 values (%2, %3)")
+                  .arg(tableName)
+                  .arg(value1)
+                  .arg(value2));
 }
 
-void DAO::updateQuestionAPIRelation(int groupID, int apiID)
-{
-    if(groupID < 0 || apiID < 0)
-        return;
-
-    QSqlQuery query;
-    query.exec(tr("delete from QuestionAboutAPI where GroupID = %1 and APIID = %2")
-               .arg(groupID)
-               .arg(apiID));
-    query.exec(tr("insert into QuestionAboutAPI values (%1, %2)")
-               .arg(groupID)
-               .arg(apiID));
+void DAO::updateUserAskQuestion(int questionID, int userID) {
+    updateRelationship("UserAskQuestion", "QuestionID", questionID, "UserID", userID);
 }
 
-void DAO::updateQuestionAnswerRelation(int groupID, int answerID)
-{
-    if(groupID < 0 || answerID < 0)
-        return;
+void DAO::updateQuestionAboutAPI(int questionID, int apiID) {
+    updateRelationship("QuestionAboutAPI", "QuestionID", questionID, "APIID", apiID);
+}
 
-    QSqlQuery query;
-    query.exec(tr("delete from AnswerToQuestion where GroupID = %1 and AnswerID = %2")
-               .arg(groupID)
-               .arg(answerID));
-    query.exec(tr("insert into AnswerToQuestion values (%1, %2)")
-               .arg(groupID)
-               .arg(answerID));
+void DAO::updateAnswerToQuestion(int questionID, int answerID) {
+    updateRelationship("AnswerToQuestion", "QuestionID", questionID, "AnswerID", answerID);
+}
+
+void DAO::updateUserProvideAnswer(int userID, int answerID) {
+    updateRelationship("UserProvideAnswer", "UserID", userID, "AnswerID", answerID);
 }
 
 /**
@@ -341,9 +341,10 @@ void DAO::save(const QString& userName, const QString& email, const QString& api
     int answerID   = getAnswerID  (link);
     int userID     = getUserID    (userName);
     int questionID = getQuestionID(question);
-    updateQuestionUserRelation  (questionID, userID);
-    updateQuestionAPIRelation   (questionID, apiID);
-    updateQuestionAnswerRelation(questionID, answerID);
+    updateUserAskQuestion   (questionID,    userID);
+    updateQuestionAboutAPI  (questionID,    apiID);
+    updateAnswerToQuestion  (questionID,    answerID);
+    updateUserProvideAnswer (userID,        answerID);
 
     qDebug() << "Save Q&A: " << userName << email << apiSig << question << link << title;
 }

@@ -49,9 +49,13 @@ private:
     void updateQuestion(const QString& question, int apiID);
     void updateAnswer  (const QString& link, const QString& title);
 
-    void updateQuestionUserRelation  (int groupID, int userID);           // update relation table
-    void updateQuestionAPIRelation   (int groupID, int apiID);
-    void updateQuestionAnswerRelation(int groupID, int answerID);
+    void updateRelationship(const QString& tableName,
+                            const QString& key1, int value1,
+                            const QString& key2, int value2);
+    void updateUserAskQuestion      (int questionID, int userID);           // update relation table
+    void updateQuestionAboutAPI     (int questionID, int apiID);
+    void updateAnswerToQuestion     (int questionID, int answerID);
+    void updateUserProvideAnswer    (int userID,     int answerID);
 
     void updateLead(int questionID);   // try to make questionID the new lead
 
