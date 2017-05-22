@@ -1,2 +1,4 @@
 Browser
-- Capture interface signature
++ Capture interface signature
++ Helpful count
++ IDE integration
