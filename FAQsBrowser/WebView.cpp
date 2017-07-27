@@ -3,6 +3,7 @@
 #include "DocVisitor.h"
 #include "Settings.h"
 #include "Connection.h"
+#include "SearchEngineVisitor.h"
 
 #include <QApplication>
 #include <QMenu>
@@ -19,7 +20,9 @@ WebView::WebView(QWidget* parent)
 {
     setPage(_page);
     setZoomFactor(Settings::getInstance()->getZoomFactor());
-    connect(_page, SIGNAL(loadProgress(int)), this, SLOT(onProgress(int)));
+    connect(this, SIGNAL(loadProgress(int)),        this, SLOT(onProgress(int)));
+    connect(this, SIGNAL(titleChanged(QString)),    this, SLOT(onTitleChanged(QString)));
+    connect(this, SIGNAL(loadFinished(bool)),       this, SLOT(onLoaded()));
 }
 
 void WebView::setZoomFactor(qreal factor)
@@ -83,4 +86,20 @@ void WebView::onSearchAPI() {
 
 void WebView::onProgress(int progress) {
     _progress = progress;
+}
+
+void WebView::onTitleChanged(const QString& title)
+{
+    if (getRole() == RESULT_ROLE && !title.isEmpty())
+        Connection::getInstance()->logOpenResult(url().toString());
+}
+
+void WebView::onLoaded()
+{
+    if (getRole() == SEARCH_ROLE)
+    {
+        ISearchEngineVisitor* visitor = SearchEngineVisitorFactory::getInstance()->getVisitor(
+                    Settings::getInstance()->getSearchEngine());
+        visitor->hideSearchBar(page());
+    }
 }

@@ -15,6 +15,8 @@
 ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
     : QObject(req)
 {
+    _dao = DAO::getInstance();
+
     // automatically collect http body(data) up to 10MB
     req->collectData(10*1024*1024);
 
@@ -26,7 +28,7 @@ ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
         QString url = req->url().toString();
         if(!url.startsWith("/?action"))
         {
-            processStaticResourceRequest(url, res);
+            onStaticResource(url, res);
             return;
         }
 
@@ -34,28 +36,38 @@ ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
         Parameters params = parseParameters(url);   // parameters in the request
         QString action = params["action"];
         if(action == "ping")
-            processPingRequest(params, res);
-        else if(action == "save")
-            processSaveRequest(params, res);
-        else if(action == "logapi")
-            processLogDocumentReadingRequest(params, res);
-        else if(action == "loganswer")
-            processLogAnswerClickingRequest(params, res);
-        else if(action == "query")
-            processQueryRequest(params, res);
-        else if(action == "personal")
-            processQueryUserProfileRequest(params, res);
+            onPing(params, res);
+        else if (action == "docreading")
+            onDocumentReading(params, res);
+        else if (action == "searchstart")
+            onSearchStart(params, res);
+        else if (action == "searchend")
+            onSearchEnd(params, res);
+        else if (action == "openresult")
+            onOpenResult(params, res);
+        else if (action == "closeresult")
+            onCloseResult(params, res);
+        else if (action == "helpful")
+            onHelpful(params, res);
+        else if (action == "answerclicking")
+            onAnswerClicking(params, res);
+        else if(action == "queryfaqs")
+            onQueryFAQs(params, res);
+        else if(action == "savefaq")
+            onSaveFAQ(params, res);
+        else if(action == "profile")
+            onQueryUserProfile(params, res);
         else if(action == "submitphoto")
         {
             QByteArray data = req->collectedData();
-            processSubmitPhotoRequest(params, req, res);
+            onSubmitPhoto(params, req, res);
         }
     });
 }
 
 /**
  * Parse a request URL and get its parameters
- * e.g., the URL is XXX/?action=query&apisig=YYY
+ * e.g., the URL is in the form of XXX/?action=query&apisig=YYY
  * @param url   - the URL
  * @return      - a Parameters object
  */
@@ -81,7 +93,7 @@ ClientHandler::Parameters ClientHandler::parseParameters(const QString& url) con
  * @param params    - parameters of the request
  * @param res       - response
  */
-void ClientHandler::processPingRequest(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onPing(const Parameters& params, QHttpResponse* res)
 {
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
@@ -95,16 +107,17 @@ void ClientHandler::processPingRequest(const Parameters& params, QHttpResponse* 
  * @param params    - parameters of the request
  * @param res       - response
  */
-void ClientHandler::processSaveRequest(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onSaveFAQ(const Parameters& params, QHttpResponse* res)
 {
     // link and title may contain percentage encoded reserved chars, such as & < > #
     // convert them back to human readable chars
-    DAO::getInstance()->save(params["username"],
-                             params["email"],
-                             params["apisig"],
-                             params["question"],
-                             QUrl::fromPercentEncoding(params["link"] .toUtf8()),
-                             QUrl::fromPercentEncoding(params["title"].toUtf8()));
+    _dao->saveFAQ(
+            params["username"],
+            params["email"],
+            params["apisig"],
+            params["question"],
+            QUrl::fromPercentEncoding(params["link"] .toUtf8()),
+            QUrl::fromPercentEncoding(params["title"].toUtf8()));
 
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
@@ -117,9 +130,9 @@ void ClientHandler::processSaveRequest(const Parameters& params, QHttpResponse* 
  * @param params    - parameters of the request
  * @param res       - response
  */
-void ClientHandler::processLogDocumentReadingRequest(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onDocumentReading(const Parameters& params, QHttpResponse* res)
 {
-    DAO::getInstance()->logDocumentReading(
+    _dao->logDocumentReading(
             params["username"],
             params["email"],
             params["apisig"]);
@@ -130,16 +143,84 @@ void ClientHandler::processLogDocumentReadingRequest(const Parameters& params, Q
     res->end();
 }
 
+void ClientHandler::onSearchStart(const Parameters& params, QHttpResponse* res)
+{
+    _dao->logSearchStart(
+            params["username"],
+            params["email"],
+            params["apisig"],
+            params["question"]);
+
+    res->addHeader("Content-Type", "text/html");
+    res->setStatusCode(qhttp::ESTATUS_OK);
+    res->write(tr("Search start is logged").toUtf8());
+    res->end();
+}
+
+void ClientHandler::onSearchEnd(const Parameters& params, QHttpResponse* res)
+{
+    _dao->logSearchEnd(
+            params["username"],
+            params["email"],
+            params["apisig"],
+            params["question"]);
+
+    res->addHeader("Content-Type", "text/html");
+    res->setStatusCode(qhttp::ESTATUS_OK);
+    res->write(tr("Search end is logged").toUtf8());
+    res->end();
+}
+
+void ClientHandler::onOpenResult(const Parameters& params, QHttpResponse* res)
+{
+    _dao->logOpenResult(
+            params["username"],
+            params["email"],
+            params["link"]);
+
+    res->addHeader("Content-Type", "text/html");
+    res->setStatusCode(qhttp::ESTATUS_OK);
+    res->write(tr("Open result is logged").toUtf8());
+    res->end();
+}
+
+void ClientHandler::onCloseResult(const Parameters& params, QHttpResponse* res)
+{
+    _dao->logCloseResult(
+            params["username"],
+            params["email"],
+            params["link"]);
+
+    res->addHeader("Content-Type", "text/html");
+    res->setStatusCode(qhttp::ESTATUS_OK);
+    res->write(tr("Close result is logged").toUtf8());
+    res->end();
+}
+
+void ClientHandler::onHelpful(const Parameters& params, QHttpResponse* res)
+{
+    _dao->logHelpful(
+            params["username"],
+            params["email"],
+            params["link"],
+            params["helpful"].toLower() == "true");
+
+    res->addHeader("Content-Type", "text/html");
+    res->setStatusCode(qhttp::ESTATUS_OK);
+    res->write(tr("Set helpful is logged").toUtf8());
+    res->end();
+}
+
 /**
  * Process log answer clicking request
  * @param params    - parameters of the request
  * @param res       - response
  */
-void ClientHandler::processLogAnswerClickingRequest(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onAnswerClicking(const Parameters& params, QHttpResponse* res)
 {
     // link may contain percentage encoded reserved chars, such as & < > #
     // convert them back to human readable chars
-    DAO::getInstance()->logAnswerClicking(
+    _dao->logAnswerClicking(
             params["username"],
             params["email"],
             QUrl::fromPercentEncoding(params["link"] .toUtf8()));
@@ -155,9 +236,9 @@ void ClientHandler::processLogAnswerClickingRequest(const Parameters& params, QH
  * @param params    - parameters of the request
  * @param res       - response
  */
-void ClientHandler::processQueryRequest(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onQueryFAQs(const Parameters& params, QHttpResponse* res)
 {
-    QJsonArray jaFAQs = DAO::getInstance()->queryFAQs(params["class"]).array();
+    QJsonArray jaFAQs = _dao->queryFAQs(params["class"]).array();
     if(jaFAQs.isEmpty())   // returned is a json array
         return;
     res->addHeader("Content-Type", "text/html");
@@ -172,7 +253,7 @@ void ClientHandler::processQueryRequest(const Parameters& params, QHttpResponse*
  * @param params    - parameters of the request
  * @param res       - response
  */
-void ClientHandler::processQueryUserProfileRequest(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onQueryUserProfile(const Parameters& params, QHttpResponse* res)
 {
     QJsonDocument json = DAO::getInstance()->queryUserProfile(params["username"]);
     res->addHeader("Content-Type", "text/html");
@@ -186,7 +267,7 @@ void ClientHandler::processQueryUserProfileRequest(const Parameters& params, QHt
  * @param params
  * @param res
  */
-void ClientHandler::processSubmitPhotoRequest(const Parameters& params, QHttpRequest* req, QHttpResponse* res)
+void ClientHandler::onSubmitPhoto(const Parameters& params, QHttpRequest* req, QHttpResponse* res)
 {
     res->setStatusCode(qhttp::ESTATUS_OK);
     res->write("Photo received.");
@@ -204,7 +285,7 @@ void ClientHandler::processSubmitPhotoRequest(const Parameters& params, QHttpReq
  * @param url   - requested URL
  * @param res   - response
  */
-void ClientHandler::processStaticResourceRequest(const QString& url, QHttpResponse* res)
+void ClientHandler::onStaticResource(const QString& url, QHttpResponse* res)
 {
     QFile file("." + url);
     if(file.open(QFile::ReadOnly))  // open the local file and send it back

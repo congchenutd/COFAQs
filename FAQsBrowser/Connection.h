@@ -15,18 +15,28 @@ public:
     static Connection* getInstance();   // singleton
     void ping();    // check if the server is alive
 
-    // save a Q&A pair
-    void save(const QString& apiSig, const QString& question,
-              const QString& link = QString(), const QString& title = QString());
-
-    // query for all Q&A pairs related to a given API
-    void queryFAQs(const QString& libraryName, const QString& classSig);
-
     // Log API reading
     void logDocumentReading(const QString& apiSig);  // user viewed the api doc
 
+    void logSearchStart(const QString& apiSig, const QString& question);
+
+    void logSearchEnd(const QString& apiSig, const QString& question);
+
+    void logOpenResult(const QString& link);
+
+    void logCloseResult(const QString& link);
+
+    // save a Q&A pair
+    void saveFAQ(const QString& apiSig, const QString& question,
+                 const QString& link = QString(), const QString& title = QString());
+
     // Log answer reading
     void logAnswerClicking(const QString& link);    // user clicked an answer link
+
+    void logHelpful(const QString& link, bool helpful);
+
+    // query for all Q&A pairs related to a given API
+    void queryFAQs(const QString& libraryName, const QString& classSig);
 
     // Query a user's profile
     void queryUserProfile(const QString& userName);

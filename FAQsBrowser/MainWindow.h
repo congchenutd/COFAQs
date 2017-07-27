@@ -19,6 +19,9 @@ public:
 
     static MainWindow* getInstance();
 
+protected:
+    void closeEvent(QCloseEvent* event);
+
 private slots:
     void onAbout();
     void onOptions();
@@ -41,9 +44,7 @@ private slots:
     void onHelpful();
     void onNotHelpful();
     void onPersonal();
-    void saveUnansweredQuestion(int index);
-
-private:
+    void onCloseTab(int index);
 
 private:
     WebView* currentWebView() const;

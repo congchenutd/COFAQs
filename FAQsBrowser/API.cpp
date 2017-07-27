@@ -2,15 +2,18 @@
 #include <QJsonObject>
 #include <QStringList>
 
+// e.g., java.util.ArrayList<E> -> ArrayList
 QString API::getClassName() const {
     return getClassSignature().section(".", -1, -1);
-    // e.g., java.util.ArrayList<E> -> ArrayList
 }
 
+// e.g., ensureCapacity
 QString API::getMethodName() const {
     return getMethodSignature().remove(QRegExp("\\(.*\\)"));  // remove parameters
 }
 
+// A search query for the API
+// e.g., Java SE 7 ArrayList ensureCapacity
 QString API::toQueryString() const
 {
     QString result = getLibrary() + " " + getClassName();
@@ -22,6 +25,7 @@ QString API::toQueryString() const
     return result;
 }
 
+// e.g., Java SE 7;ArrayList.ensureCapacity()
 QString API::toSignature() const
 {
     QString result = getLibrary() + ";" + getClassSignature();
@@ -30,10 +34,12 @@ QString API::toSignature() const
     return result;
 }
 
+// Lowest level of the API, e.g., method or class
 QString API::toLowestName() const {
     return getMethodName().isEmpty() ? getClassName() : getMethodName();
 }
 
+// signature string -> API
 API API::fromSignature(const QString& sig)
 {
     API result;

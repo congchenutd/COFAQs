@@ -3,8 +3,8 @@
 
 #include <QLabel>
 
-// a label for showing image
-// mouse click opens a dialog for opening an image
+// A label for showing an image
+// mouse click opens a dialog for selecting an image
 class ImageLabel : public QLabel
 {
 	Q_OBJECT

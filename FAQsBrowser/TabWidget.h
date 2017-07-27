@@ -27,11 +27,13 @@ public:
     int getSearchTabIndex(const API& api, const QString& query, const QString& question);
 
     WebView* newTab(WebView::PageRole role = WebView::NULL_ROLE);
+
+public slots:
     void closeTab(int index = -1);
+    void onCloseAllTabs();
 
 private slots:
     void onCloseOtherTabs(int index);
-    void onCloseAllTabs();
     void onReloadTab(int index = -1);
     void onReloadAllTabs();
     void onAPISearch(const API& api);

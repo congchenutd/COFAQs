@@ -11,6 +11,7 @@
 #include <QProgressBar>
 #include <QDebug>
 #include <QWebHistory>
+#include <QCloseEvent>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
@@ -84,7 +85,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(_tabWidget, SIGNAL(currentChanged(int)),            this, SLOT(onCurrentTabChanged()));
     connect(_tabWidget, SIGNAL(historyChanged()),               this, SLOT(onHistoryChanged()));
     connect(_tabWidget, SIGNAL(linkHovered(QString)), statusBar(), SLOT(showMessage(QString)));
-    connect(_tabWidget, SIGNAL(tabCloseRequested(int)),         this, SLOT(saveUnansweredQuestion(int)));
+    connect(_tabWidget, SIGNAL(tabCloseRequested(int)),         this, SLOT(onCloseTab(int)));
 
     ui.actionShowSearch->toggle();
 }
@@ -97,15 +98,21 @@ void MainWindow::newPersonalTab(const QString& userName)
 {
     Settings* settings = Settings::getInstance();
     _tabWidget->newTab(WebView::PROFILE_ROLE)->load(
-        QUrl(tr("http://%1:%2/?action=personal&username=%3").arg(settings->getServerIP())
-                                                            .arg(settings->getServerPort())
-                                                            .arg(userName)));
+        QUrl(tr("http://%1:%2/?action=profile&username=%3").arg(settings->getServerIP())
+                                                           .arg(settings->getServerPort())
+                                                           .arg(userName)));
 }
 
 MainWindow* MainWindow::_instance = 0;
 
 MainWindow* MainWindow::getInstance() {
     return _instance;
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    _tabWidget->onCloseAllTabs();
+    event->accept();
 }
 
 void MainWindow::onAbout() {
@@ -199,8 +206,12 @@ void MainWindow::onCurrentTabChanged()
 {
     if(WebView* webView = currentWebView())
     {
-        ui.actionHelpful   ->setVisible(webView->getRole() == WebView::RESULT_ROLE);
-        ui.actionNotHelpful->setVisible(webView->getRole() == WebView::RESULT_ROLE);
+        // Show helpful button when it's search result
+        // HACK: there is no result role, but doc role and search role
+        WebView::PageRole role = webView->getRole();
+        bool showHelpful = role != WebView::DOC_ROLE && role != WebView::SEARCH_ROLE;
+        ui.actionHelpful   ->setVisible(showHelpful);
+        ui.actionNotHelpful->setVisible(showHelpful);
     }
 }
 
@@ -237,28 +248,30 @@ void MainWindow::onReloadStop()
 void MainWindow::onHelpful()
 {
     if(WebView* webView = currentWebView())
-        Connection::getInstance()->save(webView->getAPI().toSignature(),
+    {
+        Connection::getInstance()->saveFAQ(webView->getAPI().toSignature(),
                                         webView->getQuestion(),
                                         webView->url().toString(),
                                         webView->title());
+        Connection::getInstance()->logHelpful(webView->url().toString(), true);
+    }
 
     _tabWidget->closeTab(_tabWidget->currentIndex());
 }
 
 void MainWindow::onNotHelpful()
 {
-    int index = _tabWidget->currentIndex();
-    saveUnansweredQuestion(index);
+    if(WebView* webView = currentWebView())
+        Connection::getInstance()->logHelpful(webView->url().toString(), false);
+
+    _tabWidget->closeTab(_tabWidget->currentIndex());
 }
 
-void MainWindow::saveUnansweredQuestion(int index)
+void MainWindow::onCloseTab(int index)
 {
-    if(WebView* webView = _tabWidget->getWebView(index))
-    {
-        if (webView->getRole() == WebView::RESULT_ROLE || webView->getRole() == WebView::SEARCH_ROLE)
-            Connection::getInstance()->save(webView->getAPI().toSignature(),
-                                            webView->getQuestion());
-    }
+    WebView* webView = _tabWidget->getWebView(index);
+    if (webView->getRole() == WebView::RESULT_ROLE)
+        Connection::getInstance()->logHelpful(webView->url().toString(), false);
     _tabWidget->closeTab(index);
 }
 

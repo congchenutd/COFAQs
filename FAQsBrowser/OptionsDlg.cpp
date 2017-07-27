@@ -16,7 +16,8 @@ OptionsDlg::OptionsDlg(QWidget* parent) :
     ui.leUsername       ->setText(settings->getUserName());
     ui.leEmail          ->setText(settings->getEmail());
     ui.btFont           ->setFont(settings->getFont());
-    ui.leSearchEngineUrl->setText(settings->getSearchEngineUrl());
+    ui.radioGoogle->setChecked(settings->getSearchEngine() == "Google");
+    ui.radioBaidu ->setChecked(settings->getSearchEngine() == "Baidu");
 
     QPixmap pixmap = QPixmap(settings->getUserName() + ".png").scaled(128, 128);
     if(!pixmap.isNull())
@@ -39,7 +40,7 @@ void OptionsDlg::accept()
     settings->setUserName       (ui.leUsername  ->text());
     settings->setEmail          (ui.leEmail     ->text());
     settings->setFont           (ui.btFont      ->font());
-    settings->setSearchEngineUrl(ui.leSearchEngineUrl->text());
+    settings->setSearchEngine(ui.radioGoogle->isChecked() ? "Google" : "Baidu");
 
     QString photoFilePath = settings->getUserName() + ".png";
     if(ui.labelImage->pixmap() != 0)

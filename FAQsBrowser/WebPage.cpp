@@ -79,7 +79,13 @@ bool WebPage::acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& r
                 Connection::getInstance()->logDocumentReading(_visitor->urlToAPI(url).toSignature());
             // external link (answer link) clicked
             else
+            {
                 Connection::getInstance()->logAnswerClicking(url);
+                WebView* newView = MainWindow::getInstance()->newTab(WebView::RESULT_ROLE);
+                newView->setAPI(thisView->getAPI());    // transfer the attributes
+                newView->load(request);
+                return false;
+            }
         }
 
         // links on the search page open in new tab

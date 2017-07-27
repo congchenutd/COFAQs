@@ -20,7 +20,13 @@ qreal   Settings::getZoomFactor()       const { return value("ZoomFactor")  .toR
 
 // Google: http://www.google.com/search?q=
 // Baidu: http://www.baidu.com/s?wd=
-QString Settings::getSearchEngineUrl()  const { return value("SearchEngineUrl").toString(); }
+QString Settings::getSearchEngineUrl()  const {
+    return getSearchEngine() == "Google" ? "http://www.google.com/search?q="
+                                         : "http://www.baidu.com/s?wd="; }
+
+QString Settings::getSearchEngine() const {
+    return value("SearchEngine").toString();
+}
 
 QFont Settings::getFont() const
 {
@@ -41,7 +47,7 @@ void Settings::setServerPort        (int port)                  { setValue("Serv
 void Settings::setUserName          (const QString& userName)   { setValue("UserName",          userName); }
 void Settings::setEmail             (const QString& email)      { setValue("Email",             email);    }
 void Settings::setZoomFactor        (qreal factor)              { setValue("ZoomFactor",        factor);   }
-void Settings::setSearchEngineUrl   (const QString& url)        { setValue("SearchEngineUrl",   url); }
+void Settings::setSearchEngine      (const QString& searchEngineName) { setValue("SearchEngine", searchEngineName); }
 
 void Settings::setFont(const QFont& font)
 {
@@ -60,7 +66,7 @@ void Settings::loadDefaults()
 {
     setLibraryName("Java SE 7");
     setDocUrl("http://docs.oracle.com/javase/7/docs/api/");
-    setSearchEngineUrl("http://www.baidu.com/s?wd=");
+    setSearchEngine("Baidu");
     setZoomFactor(1.2);
 }
 

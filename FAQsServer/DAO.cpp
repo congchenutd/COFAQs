@@ -35,41 +35,50 @@ DAO::DAO()
     query.exec("create table APIs ( \
                ID        int primary key, \
                Signature varchar unique not null)");    // e.g., lib;package.class.method
+
     query.exec("create table Answers ( \
                ID    int primary key, \
                Link  varchar unique not null, \
                Title varchar        not null)");
+
     query.exec("create table Users ( \
                ID    int primary key, \
                Name  varchar unique not null, \
                Email varchar unique)");
+
     query.exec("create table Questions ( \
                ID         int primary key, \
                Question   varchar unique not null, \
                AskCount   int, \
                Parent     int)");
+
     query.exec("create table UserAskQuestion ( \
                QuestionID int references Questions(ID) on delete cascade on update cascade, \
                UserID     int references Users    (ID) on delete cascade on update cascade, \
                primary key (QuestionID, UserID))");
+
     query.exec("create table QuestionAboutAPI ( \
                QuestionID int references Questions(ID) on delete cascade on update cascade, \
                APIID      int references APIs     (ID) on delete cascade on update cascade, \
                primary key (QuestionID, APIID))");
+
     query.exec("create table AnswerToQuestion ( \
                QuestionID int references Questions(ID) on delete cascade on update cascade, \
                AnswerID   int references Answers  (ID) on delete cascade on update cascade, \
                primary key (QuestionID, AnswerID))");
+
     query.exec("create table UserReadDocument ( \
                UserID int references Users(ID) on delete cascade on update cascade, \
                APIID  int references APIs (ID) on delete cascade on update cascade, \
                Time   varchar, \
                primary key (UserID, APIID, Time))");
+
     query.exec("create table UserReadAnswer ( \
                 UserID     int references Users    (ID) on delete cascade on update cascade, \
                 QuestionID int references Questions(ID) on delete cascade on update cascade, \
                 Time       varchar, \
                 primary key (UserID, QuestionID, Time))");
+
     query.exec("create table UserProvideAnswer ( \
                 UserID      int references Users    (ID) on delete cascade on update cascade, \
                 AnswerID    int references Answers  (ID) on delete cascade on update cascade, \
@@ -329,7 +338,7 @@ void DAO::updateUserProvideAnswer(int userID, int answerID) {
  * @param link      - link to the answer page
  * @param title     - title of the answer web page
  */
-void DAO::save(const QString& userName, const QString& email, const QString& apiSig,
+void DAO::saveFAQ(const QString& userName, const QString& email, const QString& apiSig,
                const QString& question, const QString& link,  const QString& title)
 {
     updateUser  (userName, email);
@@ -364,6 +373,31 @@ void DAO::logDocumentReading(const QString& userName, const QString& email, cons
     addUserReadDocument(getUserID(userName), getAPIID(apiSig));
 
     *_logger << "Log document reading: " << userName << email << apiSig << endl;
+}
+
+void DAO::logSearchStart(const QString& userName, const QString& email, const QString& apiSig, const QString& question)
+{
+    *_logger << "Log search start: " << userName << email << apiSig << question << endl;
+}
+
+void DAO::logSearchEnd(const QString& userName, const QString& email, const QString& apiSig, const QString& question)
+{
+    *_logger << "Log search end: " << userName << email << apiSig << question << endl;
+}
+
+void DAO::logOpenResult(const QString& userName, const QString& email, const QString& link)
+{
+    *_logger << "Log open search result: " << userName << email << link << QDateTime::currentDateTime().toString() << endl;
+}
+
+void DAO::logCloseResult(const QString& userName, const QString& email, const QString& link)
+{
+    *_logger << "Log close search result: " << userName << email << link << QDateTime::currentDateTime().toString() << endl;
+}
+
+void DAO::logHelpful(const QString& userName, const QString& email, const QString& link, bool helpful)
+{
+    *_logger << "Log helpful: " << userName << email << link << helpful << endl;
 }
 
 /**

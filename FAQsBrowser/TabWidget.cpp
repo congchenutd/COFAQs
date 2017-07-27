@@ -18,6 +18,7 @@ TabWidget::TabWidget(QWidget *parent)
     connect(_tabBar, SIGNAL(closeAllTabs()),         this, SLOT(onCloseAllTabs()));
     connect(_tabBar, SIGNAL(reloadTab(int)),         this, SLOT(onReloadTab(int)));
     connect(_tabBar, SIGNAL(reloadAllTabs()),        this, SLOT(onReloadAllTabs()));
+//    connect(this, SIGNAL(tabCloseRequested(int)),    this, SLOT(closeTab(int)));
 
     connect(this, SIGNAL(currentChanged(int)), this, SLOT(onCurrentChanged(int)));
 }
@@ -43,6 +44,13 @@ int TabWidget::getDocTabIndex()
     return indexOf(webView);
 }
 
+/**
+ * Find an existing or create a new search tab
+ * @param api       - API for the search
+ * @param query     - search query
+ * @param question  - question
+ * @return          - the index of the tab
+ */
 int TabWidget::getSearchTabIndex(const API& api, const QString& query, const QString& question)
 {
     // find existing search page
@@ -53,7 +61,7 @@ int TabWidget::getSearchTabIndex(const API& api, const QString& query, const QSt
 
     // create a new view or using the existing one
     WebView* webView = (index == count()) ? newTab(WebView::SEARCH_ROLE)
-                                      : getWebView(index);
+                                          : getWebView(index);
 
     // load page
     webView->setAPI(api);
@@ -68,8 +76,12 @@ void TabWidget::onAPISearch(const API& api)
     SearchDlg dlg(this);
     dlg.setContext(api.toQueryString());
     if(dlg.exec() == QDialog::Accepted)
+    {
         setCurrentIndex(
-            getSearchTabIndex(api, dlg.getQuery(), dlg.getQuestion() ));
+            getSearchTabIndex(api, dlg.getQuery(), dlg.getQuestion())   // go searching
+        );
+        Connection::getInstance()->logSearchStart(api.toSignature(), dlg.getQuestion());
+    }
 }
 
 void TabWidget::onReloadTab(int index) {
@@ -145,6 +157,18 @@ void TabWidget::closeTab(int index)
 {
     if (index < 0 || index >= count())
         return;
+
+    if(WebView* webView = getWebView(index))
+    {
+        WebView::PageRole role = webView->getRole();
+        if (role == WebView::DOC_ROLE)  // doc page not closable
+            return;
+
+        if (role == WebView::SEARCH_ROLE)
+            Connection::getInstance()->logSearchEnd(webView->getAPI().toSignature(), webView->getQuestion());
+        else if (role == WebView::RESULT_ROLE)
+            Connection::getInstance()->logCloseResult(webView->url().toString());
+    }
 
     widget(index)->deleteLater();
     removeTab(index);

@@ -17,16 +17,17 @@ public:
     qreal   getZoomFactor()         const;
     QFont   getFont()               const;
     QString getSearchEngineUrl()    const;
+    QString getSearchEngine()       const;
 
     void setDocUrl          (const QString& url);
-    void setLibraryName         (const QString& libName);
+    void setLibraryName     (const QString& libName);
     void setServerIP        (const QString& ip);
     void setServerPort      (int port);
     void setUserName        (const QString& userName);
     void setEmail           (const QString& email);
     void setZoomFactor      (qreal factor);
     void setFont            (const QFont& font);
-    void setSearchEngineUrl (const QString& url);
+    void setSearchEngine    (const QString& searchEngineName);
 
 private:
     Settings();

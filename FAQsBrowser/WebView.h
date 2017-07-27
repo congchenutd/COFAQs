@@ -36,6 +36,8 @@ private slots:
     void onOpenLinkInNewTab();
     void onSearchAPI();
     void onProgress(int progress);
+    void onTitleChanged(const QString& title);
+    void onLoaded();
 
 signals:
     void apiSearch(const API& api);

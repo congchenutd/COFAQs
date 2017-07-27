@@ -18,11 +18,21 @@ public:
     void setLogger(Logger* logger);
 
     // save a QA pair or just a question
-    void save(const QString& userName, const QString& email, const QString& apiSig,
-              const QString& question, const QString& link,  const QString& title);
+    void saveFAQ(const QString& userName, const QString& email, const QString& apiSig,
+                 const QString& question, const QString& link,  const QString& title);
 
     // log API reading history
     void logDocumentReading(const QString& userName, const QString& email, const QString& apiSig);
+
+    void logSearchStart(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
+
+    void logSearchEnd(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
+
+    void logOpenResult(const QString& userName, const QString& email, const QString& link);
+
+    void logCloseResult(const QString& userName, const QString& email, const QString& link);
+
+    void logHelpful(const QString& userName, const QString& email, const QString& link, bool helpful);
 
     // log answer clicking history
     void logAnswerClicking(const QString& userName, const QString& email, const QString& link);

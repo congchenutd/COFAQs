@@ -25,7 +25,8 @@ Main.cpp \
     Connection.cpp \
     Settings.cpp \
     Template.cpp \
-    ImageLabel.cpp
+    ImageLabel.cpp \
+    SearchEngineVisitor.cpp
 
 HEADERS  += MainWindow.h \
     TabWidget.h \
@@ -40,7 +41,8 @@ HEADERS  += MainWindow.h \
     Connection.h \
     Settings.h \
     Template.h \
-    ImageLabel.h
+    ImageLabel.h \
+    SearchEngineVisitor.h
 
 FORMS    += MainWindow.ui \
     OptionsDlg.ui \
