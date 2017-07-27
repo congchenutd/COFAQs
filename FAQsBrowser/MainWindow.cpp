@@ -82,7 +82,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(_tabWidget, SIGNAL(loadProgress(int)),              this, SLOT(onLoadProgress(int)));
     connect(_tabWidget, SIGNAL(currentTitleChanged(QString)),   this, SLOT(onCurrentTitleChanged(QString)));
-    connect(_tabWidget, SIGNAL(currentChanged(int)),            this, SLOT(onCurrentTabChanged()));
     connect(_tabWidget, SIGNAL(historyChanged()),               this, SLOT(onHistoryChanged()));
     connect(_tabWidget, SIGNAL(linkHovered(QString)), statusBar(), SLOT(showMessage(QString)));
     connect(_tabWidget, SIGNAL(tabCloseRequested(int)),         this, SLOT(onCloseTab(int)));
@@ -194,25 +193,20 @@ void MainWindow::onLoadProgress(int progress)
     _progressBar->setValue(progress);
     _progressBar->setVisible(loading);
     toggleReloadStop(loading);
+
+    if (progress == 100) {
+        if(WebView* webView = currentWebView())
+        {
+            bool showHelpful = webView->getRole() == WebView::RESULT_ROLE;
+            ui.actionHelpful   ->setVisible(showHelpful);
+            ui.actionNotHelpful->setVisible(showHelpful);
+        }
+    }
 }
 
 void MainWindow::onCurrentTitleChanged(const QString& title) {
     setWindowTitle(title.isEmpty() ? tr("FAQ Browser")
                                    : tr("%1 - FAQ Browser").arg(title));
-    onCurrentTabChanged();
-}
-
-void MainWindow::onCurrentTabChanged()
-{
-    if(WebView* webView = currentWebView())
-    {
-        // Show helpful button when it's search result
-        // HACK: there is no result role, but doc role and search role
-        WebView::PageRole role = webView->getRole();
-        bool showHelpful = role != WebView::DOC_ROLE && role != WebView::SEARCH_ROLE;
-        ui.actionHelpful   ->setVisible(showHelpful);
-        ui.actionNotHelpful->setVisible(showHelpful);
-    }
 }
 
 void MainWindow::onBack() {

@@ -5,17 +5,12 @@
 
 ISearchEngineVisitor::~ISearchEngineVisitor() {}
 
-
-void GoogleVisitor::hideSearchBar(const QWebPage *page)
-{
-    QWebElement form = page->mainFrame()->findFirstElement("form[id=tsf]");
-    form.removeFromDocument();
+void GoogleVisitor::hideSearchBar(const QWebPage* page) {
+    page->mainFrame()->findFirstElement("form[id=tsf]").removeFromDocument();
 }
 
-void BaiduVisitor::hideSearchBar(const QWebPage* page)
-{
-    QWebElement form = page->mainFrame()->findFirstElement("form[id=form]");
-    form.removeFromDocument();
+void BaiduVisitor::hideSearchBar(const QWebPage* page) {
+    page->mainFrame()->findFirstElement("form[id=form]").removeFromDocument();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -40,5 +35,5 @@ SearchEngineVisitorFactory::SearchEngineVisitorFactory()
 {
     // class name -> parser name
     qRegisterMetaType<GoogleVisitor>("Google");
-    qRegisterMetaType<BaiduVisitor>("Baidu");
+    qRegisterMetaType<BaiduVisitor >("Baidu");
 }

@@ -36,7 +36,6 @@ private slots:
     void onHighlight(const QString& target, bool highlight, bool matchCase);
     void onLoadProgress(int progress);
     void onCurrentTitleChanged(const QString& title);
-    void onCurrentTabChanged();
     void onBack();
     void onForward();
     void onHistoryChanged();

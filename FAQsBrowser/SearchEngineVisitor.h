@@ -3,6 +3,10 @@
 
 #include <QWebPage>
 
+/**
+ * Hide search bar on search engine pages
+ */
+
 class ISearchEngineVisitor
 {
 public:

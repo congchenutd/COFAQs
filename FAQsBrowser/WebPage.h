@@ -15,11 +15,7 @@ class WebPage : public QWebPage
 public:
     WebPage(QObject* parent = 0);
 
-public slots:
-    void requestFAQs();
-
 private slots:
-    void onQueryReply(const QJsonObject& joDocPage);
     void onSslErrors(QNetworkReply* reply);
 
 protected:

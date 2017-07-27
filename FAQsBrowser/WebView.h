@@ -38,6 +38,10 @@ private slots:
     void onProgress(int progress);
     void onTitleChanged(const QString& title);
     void onLoaded();
+    void onQueryReply(const QJsonObject &joDocPage);
+
+private:
+    void requestFAQs();
 
 signals:
     void apiSearch(const API& api);

@@ -11,6 +11,8 @@
 #include <QWebHitTestResult>
 #include <QWebElement>
 #include <QDebug>
+#include <QJsonObject>
+#include <QJsonArray>
 
 WebView::WebView(QWidget* parent)
     : QWebView(parent),
@@ -23,6 +25,8 @@ WebView::WebView(QWidget* parent)
     connect(this, SIGNAL(loadProgress(int)),        this, SLOT(onProgress(int)));
     connect(this, SIGNAL(titleChanged(QString)),    this, SLOT(onTitleChanged(QString)));
     connect(this, SIGNAL(loadFinished(bool)),       this, SLOT(onLoaded()));
+    connect(Connection::getInstance(), SIGNAL(queryReply(QJsonObject)),
+            this, SLOT(onQueryReply(QJsonObject)));
 }
 
 void WebView::setZoomFactor(qreal factor)
@@ -96,10 +100,38 @@ void WebView::onTitleChanged(const QString& title)
 
 void WebView::onLoaded()
 {
-    if (getRole() == SEARCH_ROLE)
+    if (getRole() == DOC_ROLE) {
+        requestFAQs();
+    }
+
+    else if (getRole() == SEARCH_ROLE)
     {
         ISearchEngineVisitor* visitor = SearchEngineVisitorFactory::getInstance()->getVisitor(
                     Settings::getInstance()->getSearchEngine());
         visitor->hideSearchBar(page());
+    }
+}
+
+void WebView::requestFAQs()
+{
+    // when the page is loaded, query for the FAQ for this class
+    QString classSig = _visitor->getClassSig(_visitor->getRootElement(page()));
+    if(!classSig.isEmpty())   // is a class page
+        Connection::getInstance()->queryFAQs(_visitor->getLibrary(), classSig);
+}
+
+void WebView::onQueryReply(const QJsonObject& joDocPage)
+{
+    if(joDocPage.empty())
+        return;
+
+    _visitor->setStyleSheet(page(), joDocPage.value("style").toString());
+
+    // for each API, add a FAQ section to its document
+    QJsonArray jaAPIs = joDocPage.value("apis").toArray();
+    for(QJsonArray::ConstIterator it = jaAPIs.begin(); it != jaAPIs.end(); ++it)
+    {
+        QJsonObject joAPI = (*it).toObject();
+        _visitor->addFAQ(page(), joAPI);
     }
 }

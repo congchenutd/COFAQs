@@ -12,8 +12,6 @@
 #include <QDebug>
 #include <QWebFrame>
 #include <QWebElement>
-#include <QJsonArray>
-#include <QJsonObject>
 #include <QNetworkReply>
 
 WebPage::WebPage(QObject* parent)
@@ -21,34 +19,7 @@ WebPage::WebPage(QObject* parent)
 {
     const QString libName = Settings::getInstance()->getLibrary();
     _visitor = DocVisitorFactory::getInstance()->getVisitor(libName);
-    connect(this, SIGNAL(loadFinished(bool)), this, SLOT(requestFAQs()));
-    connect(Connection::getInstance(), SIGNAL(queryReply(QJsonObject)),
-            this, SLOT(onQueryReply(QJsonObject)));
     connect(networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, QList<QSslError>)), SLOT(onSslErrors(QNetworkReply*)));
-}
-
-void WebPage::requestFAQs()
-{
-    // when the page is loaded, query for the FAQ for this class
-    QString classSig = _visitor->getClassSig(_visitor->getRootElement(this));
-    if(!classSig.isEmpty())   // is a class page
-        Connection::getInstance()->queryFAQs(_visitor->getLibrary(), classSig);
-}
-
-void WebPage::onQueryReply(const QJsonObject& joDocPage)
-{
-    if(joDocPage.empty())
-        return;
-
-    _visitor->setStyleSheet(this, joDocPage.value("style").toString());
-
-    // for each API, add a FAQ section to its document
-    QJsonArray jaAPIs = joDocPage.value("apis").toArray();
-    for(QJsonArray::ConstIterator it = jaAPIs.begin(); it != jaAPIs.end(); ++it)
-    {
-        QJsonObject joAPI = (*it).toObject();
-        _visitor->addFAQ(this, joAPI);
-    }
 }
 
 void WebPage::onSslErrors(QNetworkReply* reply) {
