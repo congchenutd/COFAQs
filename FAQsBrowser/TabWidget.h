@@ -44,6 +44,9 @@ private slots:
     void onWebViewTitleChanged(const QString &title);
 
 private:
+    int findExistingSearchTab() const;
+
+private:
     TabBar* _tabBar;
 };
 

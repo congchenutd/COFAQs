@@ -44,6 +44,14 @@ int TabWidget::getDocTabIndex()
     return indexOf(webView);
 }
 
+int TabWidget::findExistingSearchTab() const
+{
+    for(int index = 0; index < count(); ++index)
+        if(getWebView(index)->getRole() == WebView::SEARCH_ROLE)
+            return index;
+    return -1;
+}
+
 /**
  * Find an existing or create a new search tab
  * @param api       - API for the search
@@ -51,19 +59,20 @@ int TabWidget::getDocTabIndex()
  * @param question  - question
  * @return          - the index of the tab
  */
-int TabWidget::getSearchTabIndex(const API& api, const QString& query, const QString& question)
+int TabWidget::createSearchTab(const API& api, const QString& query, const QString& question)
 {
     // find existing search page
-    int index;
-    for(index = 0; index < count(); ++index)
-        if(getWebView(index)->getRole() == WebView::SEARCH_ROLE)
-            break;
+    int index = findExistingSearchTab();
 
-    // create a new view or using the existing one
-    WebView* webView = (index == count()) ? newTab(WebView::SEARCH_ROLE)
-                                          : getWebView(index);
+    // create a new view or use the existing one
+    WebView* webView = (index == -1) ? newTab(WebView::SEARCH_ROLE)
+                                     : getWebView(index);
 
-    // load page
+    // Previous search is ended
+    if (index > -1)
+        Connection::getInstance()->logSearchEnd(webView->getAPI().toSignature(), webView->getQuestion());
+
+    // load search page
     webView->setAPI(api);
     webView->setQuestion(question);
     webView->load(QUrl(Settings::getInstance()->getSearchEngineUrl() + query));
@@ -78,7 +87,7 @@ void TabWidget::onAPISearch(const API& api)
     if(dlg.exec() == QDialog::Accepted)
     {
         setCurrentIndex(
-            getSearchTabIndex(api, dlg.getQuery(), dlg.getQuestion())   // go searching
+            createSearchTab(api, dlg.getQuery(), dlg.getQuestion())   // go searching
         );
         Connection::getInstance()->logSearchStart(api.toSignature(), dlg.getQuestion());
     }
@@ -96,7 +105,7 @@ void TabWidget::onCurrentChanged(int index)
         return;
 
     WebView* webView = getWebView(index);
-    if(!webView)
+    if(webView == 0)
         return;
 
     // disconnect signals from prev tab so that its progress won't affect current one

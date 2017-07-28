@@ -29,8 +29,8 @@ public:
     void     setZoomFactor(qreal factor);
 
 protected:
-    void contextMenuEvent(QContextMenuEvent* event);
-    void wheelEvent      (QWheelEvent* event);
+    void contextMenuEvent   (QContextMenuEvent* event);
+    void wheelEvent         (QWheelEvent* event);
 
 private slots:
     void onOpenLinkInNewTab();
