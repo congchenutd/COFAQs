@@ -25,9 +25,8 @@ private:
     void onSearchEnd        (const Parameters& params, QHttpResponse* res);
     void onOpenResult       (const Parameters& params, QHttpResponse* res);
     void onCloseResult      (const Parameters& params, QHttpResponse* res);
-    void onHelpful          (const Parameters& params, QHttpResponse* res);
+    void onRateAnswer       (const Parameters& params, QHttpResponse* res);
     void onAnswerClicking   (const Parameters& params, QHttpResponse* res);
-    void onSaveFAQ          (const Parameters& params, QHttpResponse* res);
     void onQueryFAQs        (const Parameters& params, QHttpResponse* res);
     void onQueryUserProfile (const Parameters& params, QHttpResponse* res);
     void onSubmitPhoto      (const Parameters& params, QHttpRequest* req, QHttpResponse* res);

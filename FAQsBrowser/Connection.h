@@ -22,9 +22,9 @@ public:
 
     void logSearchEnd(const QString& apiSig, const QString& question);
 
-    void logOpenResult(const QString& link);
+    void logOpenResult(const QString& apiSig, const QString& question, const QString& link, const QString& title);
 
-    void logCloseResult(const QString& link);
+    void logCloseResult(const QString& apiSig, const QString& question, const QString& link);
 
     // save a Q&A pair
     void saveFAQ(const QString& apiSig, const QString& question,
@@ -33,7 +33,8 @@ public:
     // Log answer reading
     void logAnswerClicking(const QString& link);    // user clicked an answer link
 
-    void logHelpful(const QString& link, bool helpful);
+    void logHelpful(const QString& apiSig, const QString& question,
+                    const QString& link, const QString& title, bool helpful);
 
     // query for all Q&A pairs related to a given API
     void queryFAQs(const QString& libraryName, const QString& classSig);

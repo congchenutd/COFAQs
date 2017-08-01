@@ -47,14 +47,12 @@ ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
             onOpenResult(params, res);
         else if (action == "closeresult")
             onCloseResult(params, res);
-        else if (action == "helpful")
-            onHelpful(params, res);
+        else if (action == "rateanswer")
+            onRateAnswer(params, res);
         else if (action == "answerclicking")
             onAnswerClicking(params, res);
         else if(action == "queryfaqs")
             onQueryFAQs(params, res);
-        else if(action == "savefaq")
-            onSaveFAQ(params, res);
         else if(action == "profile")
             onQueryUserProfile(params, res);
         else if(action == "submitphoto")
@@ -99,29 +97,6 @@ void ClientHandler::onPing(const Parameters& params, QHttpResponse* res)
     res->setStatusCode(qhttp::ESTATUS_OK);
     QString userName = params.contains("username") ? params["username"] : "anonymous";
     res->write(tr("Hello %1, I'm alive!").arg(userName).toUtf8());
-    res->end();
-}
-
-/**
- * Process saving FAQ request
- * @param params    - parameters of the request
- * @param res       - response
- */
-void ClientHandler::onSaveFAQ(const Parameters& params, QHttpResponse* res)
-{
-    // link and title may contain percentage encoded reserved chars, such as & < > #
-    // convert them back to human readable chars
-    _dao->saveFAQ(
-            params["username"],
-            params["email"],
-            params["apisig"],
-            params["question"],
-            QUrl::fromPercentEncoding(params["link"] .toUtf8()),
-            QUrl::fromPercentEncoding(params["title"].toUtf8()));
-
-    res->addHeader("Content-Type", "text/html");
-    res->setStatusCode(qhttp::ESTATUS_OK);
-    res->write(tr("Your FAQ is saved").toUtf8());
     res->end();
 }
 
@@ -176,7 +151,10 @@ void ClientHandler::onOpenResult(const Parameters& params, QHttpResponse* res)
     _dao->logOpenResult(
             params["username"],
             params["email"],
-            params["link"]);
+            params["apisig"],
+            params["question"],
+            QUrl::fromPercentEncoding(params["link"].toUtf8()),
+            QUrl::fromPercentEncoding(params["title"].toUtf8()));
 
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
@@ -189,7 +167,9 @@ void ClientHandler::onCloseResult(const Parameters& params, QHttpResponse* res)
     _dao->logCloseResult(
             params["username"],
             params["email"],
-            params["link"]);
+            params["apisig"],
+            params["question"],
+            QUrl::fromPercentEncoding(params["link"].toUtf8()));
 
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
@@ -197,17 +177,22 @@ void ClientHandler::onCloseResult(const Parameters& params, QHttpResponse* res)
     res->end();
 }
 
-void ClientHandler::onHelpful(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onRateAnswer(const Parameters& params, QHttpResponse* res)
 {
-    _dao->logHelpful(
+    // link and title may contain percentage encoded reserved chars, such as & < > #
+    // convert them back to human readable chars
+    _dao->logRating(
             params["username"],
             params["email"],
-            params["link"],
+            params["apisig"],
+            params["question"],
+            QUrl::fromPercentEncoding(params["link"] .toUtf8()),
+            QUrl::fromPercentEncoding(params["title"].toUtf8()),
             params["helpful"].toLower() == "true");
 
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
-    res->write(tr("Set helpful is logged").toUtf8());
+    res->write(tr("Your rating is saved").toUtf8());
     res->end();
 }
 
@@ -223,7 +208,7 @@ void ClientHandler::onAnswerClicking(const Parameters& params, QHttpResponse* re
     _dao->logAnswerClicking(
             params["username"],
             params["email"],
-            QUrl::fromPercentEncoding(params["link"] .toUtf8()));
+            QUrl::fromPercentEncoding(params["link"].toUtf8()));
 
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);

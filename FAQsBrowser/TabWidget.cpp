@@ -121,6 +121,18 @@ void TabWidget::onCurrentChanged(int index)
     prevTabIndex = index;
 }
 
+void TabWidget::onTitleLoaded(const QString& title)
+{
+    if (title.isEmpty())
+        return;
+
+    qDebug() << "title loaded" << title;
+    WebView* webView = qobject_cast<WebView*>(sender());
+    int index = indexOf(webView);
+    if(-1 != index && currentIndex() == index)
+        emit titleLoaded();
+}
+
 WebView* TabWidget::newTab(WebView::PageRole role)
 {
     WebView* webView = new WebView;
@@ -131,6 +143,7 @@ WebView* TabWidget::newTab(WebView::PageRole role)
     connect(webView, SIGNAL(iconChanged()),         this, SLOT(onWebViewIconChanged()));
     connect(webView, SIGNAL(titleChanged(QString)), this, SLOT(onWebViewTitleChanged(QString)));
     connect(webView, SIGNAL(apiSearch(API)),        this, SLOT(onAPISearch(API)));
+    connect(webView, SIGNAL(titleChanged(QString)), this, SLOT(onTitleLoaded(QString)));
 
     connect(webView->page(), SIGNAL(linkHovered(QString,QString,QString)),
             this, SIGNAL(linkHovered(QString)));
@@ -176,7 +189,7 @@ void TabWidget::closeTab(int index)
         if (role == WebView::SEARCH_ROLE)
             Connection::getInstance()->logSearchEnd(webView->getAPI().toSignature(), webView->getQuestion());
         else if (role == WebView::RESULT_ROLE)
-            Connection::getInstance()->logCloseResult(webView->url().toString());
+            Connection::getInstance()->logCloseResult(webView->getAPI().toSignature(), webView->getQuestion(), webView->url().toString());
     }
 
     widget(index)->deleteLater();

@@ -16,6 +16,7 @@ signals:
     void linkHovered(const QString& link);
     void loadProgress(int progress);
     void historyChanged();   // page back and forward history
+    void titleLoaded();
 
 public:
     TabWidget(QWidget* parent = 0);
@@ -24,7 +25,7 @@ public:
     WebView* getWebView(int index) const;
 
     int getDocTabIndex();
-    int getSearchTabIndex(const API& api, const QString& query, const QString& question);
+    int createSearchTab(const API& api, const QString& query, const QString& question);
 
     WebView* newTab(WebView::PageRole role = WebView::NULL_ROLE);
 
@@ -38,6 +39,7 @@ private slots:
     void onReloadAllTabs();
     void onAPISearch(const API& api);
     void onCurrentChanged(int index);
+    void onTitleLoaded(const QString& title);
 
     void onWebViewLoadStarted();
     void onWebViewIconChanged();

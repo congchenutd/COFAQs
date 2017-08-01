@@ -17,10 +17,6 @@ public:
 
     void setLogger(Logger* logger);
 
-    // save a QA pair or just a question
-    void saveFAQ(const QString& userName, const QString& email, const QString& apiSig,
-                 const QString& question, const QString& link,  const QString& title);
-
     // log API reading history
     void logDocumentReading(const QString& userName, const QString& email, const QString& apiSig);
 
@@ -28,11 +24,14 @@ public:
 
     void logSearchEnd(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
 
-    void logOpenResult(const QString& userName, const QString& email, const QString& link);
+    void logOpenResult(const QString& userName, const QString& email, const QString& apiSig,
+                       const QString& question, const QString& link, const QString& title);
 
-    void logCloseResult(const QString& userName, const QString& email, const QString& link);
+    void logCloseResult(const QString& userName, const QString& email, const QString& apiSig,
+                        const QString& question, const QString& link);
 
-    void logHelpful(const QString& userName, const QString& email, const QString& link, bool helpful);
+    void logRating(const QString& userName, const QString& email, const QString& apiSig,
+                    const QString& question, const QString& link,  const QString& title, bool helpful);
 
     // log answer clicking history
     void logAnswerClicking(const QString& userName, const QString& email, const QString& link);
@@ -57,26 +56,24 @@ private:
     int getQuestionID(const QString& question)  const;
     int getAnswerID  (const QString& link)      const;
 
-    void updateUser    (const QString& userName, const QString& email);  // update single table
-    void updateAPI     (const QString& signature);
-    void updateQuestion(const QString& question, int apiID);
-    void updateAnswer  (const QString& link, const QString& title);
+    int updateUser    (const QString& userName, const QString& email);  // update single table
+    int updateAPI     (const QString& signature);
+    int updateQuestion(const QString& question, const QString& apiSig);
+    int updateAnswer  (const QString& link, const QString& title);
 
     void updateRelationship(const QString& tableName,
                             const QString& key1, int value1,
                             const QString& key2, int value2);
-    void updateUserAskQuestion      (int questionID, int userID);           // update relation table
     void updateQuestionAboutAPI     (int questionID, int apiID);
     void updateAnswerToQuestion     (int questionID, int answerID);
     void updateUserProvideAnswer    (int userID,     int answerID);
+
+    void updateUserRateAnswer(int userID, int answerID, bool helpful);
 
     void updateLead(int questionID);   // try to make questionID the new lead
 
     // initiate comparison between the question and other lead questions associated with apiID
     void measureSimilarity(const QString& question, int apiID);
-
-    void addUserReadDocument(int userID, int apiID);     // user viewed API doc
-    void addUserClickAnswer (int userID, int answerID);  // user clicked the answer
 
     // table -> json
     QJsonObject createAnswerJson    (int answerID) const;  // an answer -> json

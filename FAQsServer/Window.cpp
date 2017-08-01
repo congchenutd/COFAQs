@@ -20,6 +20,7 @@ Window::Window(QWidget* parent) :
     setAttribute(Qt::WA_QuitOnClose, false);
 
     QMenu* menu = new QMenu(this);
+    menu->addAction("About",        this, SLOT(onAbout()));
     menu->addAction("Show window",  this, SLOT(show()));
     menu->addAction("Quit",         this, SLOT(onQuit()));
 
@@ -52,6 +53,13 @@ void Window::closeEvent(QCloseEvent* event)
 {
     hide();
     event->ignore();
+}
+
+void Window::onAbout()
+{
+    QMessageBox::about(this, tr("About"),
+                       tr("<h3><b>FAQ Server v1.2</b></h3>"
+                          "<p><a href=mailto:CongChenUTD@Gmail.com>CongChenUTD@Gmail.com</a></p>"));
 }
 
 void Window::onQuit()

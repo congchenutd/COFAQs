@@ -16,6 +16,7 @@ protected:
     void closeEvent(QCloseEvent* event);
 
 private slots:
+    void onAbout();
     void onQuit();
     void onTrayActivated(QSystemTrayIcon::ActivationReason reason);
 

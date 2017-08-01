@@ -53,8 +53,9 @@ DAO::DAO()
                Parent     int)");
 
     query.exec("create table UserAskQuestion ( \
-               QuestionID int references Questions(ID) on delete cascade on update cascade, \
-               UserID     int references Users    (ID) on delete cascade on update cascade, \
+               QuestionID   int references Questions(ID) on delete cascade on update cascade, \
+               UserID       int references Users    (ID) on delete cascade on update cascade, \
+               Time         varchar, \
                primary key (QuestionID, UserID))");
 
     query.exec("create table QuestionAboutAPI ( \
@@ -83,6 +84,29 @@ DAO::DAO()
                 UserID      int references Users    (ID) on delete cascade on update cascade, \
                 AnswerID    int references Answers  (ID) on delete cascade on update cascade, \
                 primary key (UserID, AnswerID))");
+
+    query.exec("create table UserRateAnswer ( \
+               UserID       int references Users    (ID) on delete cascade on update cascade, \
+               AnswerID     int references Answers  (ID) on delete cascade on update cascade, \
+               Helpful      int, \
+               primary key (UserID, AnswerID))");
+
+    query.exec("create table UserSearchQuestion ( \
+               UserID       int references Users        (ID) on delete cascade on update cascade, \
+               QuestionID   int references Questions    (ID) on delete cascade on update cascade, \
+               APIID        int references APIs         (ID) on delete cascade on update cascade, \
+               StartTime    varchar, \
+               EndTime      varchar, \
+               primary key (UserID, QuestionID, APIID, StartTime))");
+
+    query.exec("create table UserReadSearchResult ( \
+               UserID       int references Users        (ID) on delete cascade on update cascade, \
+               QuestionID   int references Questions    (ID) on delete cascade on update cascade, \
+               APIID        int references APIs         (ID) on delete cascade on update cascade, \
+               AnswerID     int references Answers  (ID) on delete cascade on update cascade, \
+               StartTime    varchar, \
+               EndTime      varchar, \
+               primary key (UserID, QuestionID, APIID, AnswerID, StartTime))");
 
     _comparer = new SimilarityComparer(this);
     connect(_comparer, SIGNAL(comparisonResult  (QString,QString,qreal)),
@@ -117,58 +141,71 @@ int DAO::getID(const QString& tableName, const QString& section, const QString& 
     query.exec();
     return query.next() ? query.value(0).toInt() : -1;
 }
+
 int DAO::getUserID    (const QString& userName)  const { return getID("Users",     "Name",      userName); }
 int DAO::getAPIID     (const QString& signature) const { return getID("APIs",      "Signature", signature); }
 int DAO::getQuestionID(const QString& question)  const { return getID("Questions", "Question",  question); }
 int DAO::getAnswerID  (const QString& link)      const { return getID("Answers",   "Link",      link); }
 
 /**
- * Write an API to db
- * @param signature
+ * Write an API into db
+ * @return API ID
  */
-void DAO::updateAPI(const QString& signature)
+int DAO::updateAPI(const QString& signature)
 {
-    if(signature.isEmpty() || getAPIID(signature) >= 0)
-        return;
+    if(signature.isEmpty())
+        return -1;
 
+    int id = getAPIID(signature);
+    if (id >= 0)
+        return id;
+
+    id = getNextID("APIs");
     QSqlQuery query;
     query.prepare("insert into APIs values (:id, :sig)");   // let it fail if the API exists, because APIs don't change
-    query.bindValue(":id",  getNextID("APIs"));
+    query.bindValue(":id",  id);
     query.bindValue(":sig", signature);
     query.exec();
+    return id;
 }
 
 /**
  * Update Users table
+ * @return user ID, new or existing
  */
-void DAO::updateUser(const QString& userName, const QString& email)
+int DAO::updateUser(const QString& userName, const QString& email)
 {
     if(userName.isEmpty())
-        return;
+        return -1;
 
     // update existing user or insert a new one
     QSqlQuery query;
     int id = getUserID(userName);
-    if(id > 0) {
+    if(id > 0)
+    {
         query.prepare("update Users set Name = :name, Email = :email where ID = :id");
         query.bindValue(":id", id);
     }
-    else {
+    else
+    {
+        id = getNextID("Users");
         query.prepare("insert into Users values (:id, :name, :email)");
-        query.bindValue(":id", getNextID("Users"));
+        query.bindValue(":id", id);
     }
     query.bindValue(":name",  userName);
     query.bindValue(":email", email);
     query.exec();
+    return id;
 }
 
 /**
  * Update Questions table
+ * @return question ID, new or existing
  */
-void DAO::updateQuestion(const QString& question, int apiID)
+int DAO::updateQuestion(const QString& question, const QString& apiSig)
 {
     if(question.isEmpty())
-        return;
+        return -1;
 
     // update the ask count of the existing question
     QSqlQuery query;
@@ -178,16 +215,21 @@ void DAO::updateQuestion(const QString& question, int apiID)
         query.exec(tr("update Questions set AskCount = AskCount + 1 where ID = %1")
                    .arg(questionID));
         updateLead(questionID);
-        return;
+        return questionID;
     }
 
     // or insert a new question
+    questionID = getNextID("Questions");
     query.prepare("insert into Questions values (:id, :question, 1, -1)");
-    query.bindValue(":id",       getNextID("Questions"));
+    query.bindValue(":id",       questionID);
     query.bindValue(":question", question);
     query.exec();
 
-    measureSimilarity(question, apiID);  // initiate measure
+    int apiID = getAPIID(apiSig);
+    if (apiID > -1)
+        measureSimilarity(question, apiID);  // initiate measure
+
+    return questionID;
 }
 
 /**
@@ -270,26 +312,30 @@ void DAO::updateLead(int questionID)
  * Update Answers table
  * @param link  - link to the answer page
  * @param title - title of the web page
+ * @return      - answer ID, new or existing
  */
-void DAO::updateAnswer(const QString& link, const QString& title)
+int DAO::updateAnswer(const QString& link, const QString& title)
 {
     if(link.isEmpty())
-        return;
+        return -1;
 
     // update existing answer or insert a new one
     QSqlQuery query;
     int id = getAnswerID(link);
     if(id > 0) {
         query.prepare("update Answers set Link = :link, Title = :title where ID = :id");
-        query.bindValue(":id", id);
     }
-    else {
+    else
+    {
+        id = getNextID("Answers");
         query.prepare("insert into Answers values (:id, :link, :title)");
-        query.bindValue(":id", getNextID("Answers"));
     }
+    query.bindValue(":id", id);
     query.bindValue(":link",  link);
     query.bindValue(":title", title);
     query.exec();
+    qDebug() << query.lastError().text();
+    return id;
 }
 
 void DAO::updateRelationship(const QString& tableName,
@@ -313,10 +359,6 @@ void DAO::updateRelationship(const QString& tableName,
                   .arg(value2));
 }
 
-void DAO::updateUserAskQuestion(int questionID, int userID) {
-    updateRelationship("UserAskQuestion", "QuestionID", questionID, "UserID", userID);
-}
-
 void DAO::updateQuestionAboutAPI(int questionID, int apiID) {
     updateRelationship("QuestionAboutAPI", "QuestionID", questionID, "APIID", apiID);
 }
@@ -330,37 +372,6 @@ void DAO::updateUserProvideAnswer(int userID, int answerID) {
 }
 
 /**
- * Save a Q&A pair
- * @param userName  - user name
- * @param email     - user email
- * @param apiSig    - signature of the related API
- * @param question  - search question
- * @param link      - link to the answer page
- * @param title     - title of the answer web page
- */
-void DAO::saveFAQ(const QString& userName, const QString& email, const QString& apiSig,
-               const QString& question, const QString& link,  const QString& title)
-{
-    updateUser  (userName, email);
-    updateAPI   (apiSig);
-    updateAnswer(link, title);
-
-    int apiID = getAPIID(apiSig);       // because we may have a new apiID
-    updateQuestion(question, apiID);
-
-    // update relationships
-    int answerID   = getAnswerID  (link);
-    int userID     = getUserID    (userName);
-    int questionID = getQuestionID(question);
-    updateUserAskQuestion   (questionID,    userID);
-    updateQuestionAboutAPI  (questionID,    apiID);
-    updateAnswerToQuestion  (questionID,    answerID);
-    updateUserProvideAnswer (userID,        answerID);
-
-    *_logger << "Save Q&A: " << userName << email << apiSig << question << link << title << endl;
-}
-
-/**
  * Save document reading event
  * @param userName  - user names
  * @param email     - user email
@@ -368,71 +379,150 @@ void DAO::saveFAQ(const QString& userName, const QString& email, const QString& 
  */
 void DAO::logDocumentReading(const QString& userName, const QString& email, const QString& apiSig)
 {
-    updateUser(userName, email);
-    updateAPI (apiSig);
-    addUserReadDocument(getUserID(userName), getAPIID(apiSig));
+    int userID  = updateUser(userName, email);
+    int apiID   = updateAPI (apiSig);
 
-    *_logger << "Log document reading: " << userName << email << apiSig << endl;
-}
-
-void DAO::logSearchStart(const QString& userName, const QString& email, const QString& apiSig, const QString& question)
-{
-    *_logger << "Log search start: " << userName << email << apiSig << question << endl;
-}
-
-void DAO::logSearchEnd(const QString& userName, const QString& email, const QString& apiSig, const QString& question)
-{
-    *_logger << "Log search end: " << userName << email << apiSig << question << endl;
-}
-
-void DAO::logOpenResult(const QString& userName, const QString& email, const QString& link)
-{
-    *_logger << "Log open search result: " << userName << email << link << QDateTime::currentDateTime().toString() << endl;
-}
-
-void DAO::logCloseResult(const QString& userName, const QString& email, const QString& link)
-{
-    *_logger << "Log close search result: " << userName << email << link << QDateTime::currentDateTime().toString() << endl;
-}
-
-void DAO::logHelpful(const QString& userName, const QString& email, const QString& link, bool helpful)
-{
-    *_logger << "Log helpful: " << userName << email << link << helpful << endl;
-}
-
-/**
- * Save answer clicking event
- * @param userName
- * @param email
- * @param link
- */
-void DAO::logAnswerClicking(const QString& userName, const QString& email, const QString& link)
-{
-    updateUser(userName, email);
-    addUserClickAnswer(getUserID(userName), getAnswerID(link));
-
-    *_logger << "Log answer clicking: " << userName << email << link << endl;
-}
-
-/**
- * Add a new record to UserReadDocument table
- */
-void DAO::addUserReadDocument(int userID, int apiID)
-{
     QSqlQuery query;
     query.prepare("insert into UserReadDocument values (:userID, :apiID, :time)");
     query.bindValue(":userID", userID);
     query.bindValue(":apiID",  apiID);
     query.bindValue(":time",   getCurrentDateTime());
     query.exec();
+
+    *_logger << "Log document reading: " << userName << email << apiSig << endl;
+}
+
+void DAO::logSearchStart(const QString& userName, const QString& email, const QString& apiSig, const QString& question)
+{
+    int userID      = updateUser(userName, email);
+    int questionID  = updateQuestion(question, apiSig);
+    int apiID       = updateAPI(apiSig);
+
+    QSqlQuery query;
+    query.prepare("insert into UserSearchQuestion values (:userID, :questionID, :api, :start, \'\')");
+    query.bindValue(":userID",      userID);
+    query.bindValue(":questionID",  questionID);
+    query.bindValue(":api",         apiID);
+    query.bindValue(":start",       getCurrentDateTime());
+    query.exec();
+
+    *_logger << "Log search start: " << userName << email << apiSig << question << endl;
+}
+
+void DAO::logSearchEnd(const QString& userName, const QString& email, const QString& apiSig, const QString& question)
+{
+    int userID      = getUserID(userName);
+    int questionID  = getQuestionID(question);
+    int apiID       = updateAPI(apiSig);
+
+    QSqlQuery query;
+    query.exec(tr("select StartTime from UserSearchQuestion where UserID = %1 and QuestionID = %2 and APIID = %3 \
+                   order by StartTime desc").arg(userID).arg(questionID).arg(apiID));
+    if (query.next())
+    {
+        QString startTime = query.value(0).toString();
+        query.prepare("update UserSearchQuestion set EndTime = :EndTime \
+                       where UserID = :UserID and QuestionID = :QuestionID and APIID = :APIID and StartTime = :StartTime");
+        query.bindValue(":UserID",      userID);
+        query.bindValue(":QuestionID",  questionID);
+        query.bindValue(":APIID",       apiID);
+        query.bindValue(":StartTime",   startTime);
+        query.bindValue(":EndTime",     getCurrentDateTime());
+        query.exec();
+    }
+
+    *_logger << "Log search end: " << userName << email << apiSig << question << endl;
+}
+
+void DAO::logOpenResult(const QString& userName, const QString& email, const QString& apiSig,
+                        const QString& question, const QString& link, const QString& title)
+{
+    int userID      = updateUser(userName, email);
+    int questionID  = getQuestionID(question);
+    int apiID       = getAPIID(apiSig);
+    int answerID    = updateAnswer(link, title);
+
+    QSqlQuery query;
+    query.prepare("insert into UserReadSearchResult values (:UserID, :QuestionID, :API, :AnswerID, :Start, \'\')");
+    query.bindValue(":UserID",      userID);
+    query.bindValue(":API",         apiID);
+    query.bindValue(":QuestionID",  questionID);
+    query.bindValue(":AnswerID",    answerID);
+    query.bindValue(":Start",       getCurrentDateTime());
+    query.exec();
+
+    *_logger << "Log open search result: " << userName << email << link << QDateTime::currentDateTime().toString() << endl;
+}
+
+void DAO::logCloseResult(const QString& userName, const QString& email, const QString& apiSig,
+                         const QString& question, const QString& link)
+{
+    int userID      = updateUser(userName, email);
+    int questionID  = getQuestionID(question);
+    int apiID       = getAPIID(apiSig);
+    int answerID    = getAnswerID(link);
+
+    QSqlQuery query;
+    query.exec(tr("select StartTime from UserReadSearchResult where UserID = %1 and QuestionID = %2 and APIID = %3 and AnswerID = \'%4\' \
+                   order by StartTime desc").arg(userID).arg(questionID).arg(apiID).arg(answerID));
+    if (query.next())
+    {
+        QString startTime = query.value(0).toString();
+        query.prepare("update UserReadSearchResult set EndTime = :EndTime \
+                       where UserID = :UserID and QuestionID = :QuestionID and APIID = :APIID and AnswerID = :AnswerID and StartTime = :StartTime");
+        query.bindValue(":UserID",      userID);
+        query.bindValue(":APIID",       apiID);
+        query.bindValue(":QuestionID",  questionID);
+        query.bindValue(":AnswerID",    answerID);
+        query.bindValue(":StartTime",   startTime);
+        query.bindValue(":EndTime",     getCurrentDateTime());
+        query.exec();
+    }
+
+    *_logger << "Log close search result: " << userName << email << link << QDateTime::currentDateTime().toString() << endl;
+}
+
+void DAO::logRating(const QString& userName, const QString& email, const QString& apiSig, const QString& question,
+                    const QString& link, const QString& title, bool helpful)
+{
+    // update relationships
+    int apiID       = updateAPI       (apiSig);       // because we may have a new apiID
+    int answerID    = updateAnswer    (link, title);
+    int userID      = updateUser      (userName, email);
+    int questionID  = updateQuestion  (question, apiSig);
+    updateQuestionAboutAPI  (questionID,    apiID);
+    updateAnswerToQuestion  (questionID,    answerID);
+    updateUserProvideAnswer (userID,        answerID);
+
+    updateUserRateAnswer(userID, answerID, helpful);
+
+    *_logger << "Log helpful: " << userName << email << link << helpful << endl;
+}
+
+void DAO::updateUserRateAnswer(int userID, int answerID, bool helpful)
+{
+    QSqlQuery query;
+    query.exec(tr("select * from UserRateAnswer where UserID = %1 and AnswerID = %2").arg(userID).arg(answerID));
+
+    if (query.next())
+        query.prepare("update UserRateAnswer set Helpful = :Helpfulness where UserID = :UserID and AnswerID = :AnswerID");
+    else
+        query.prepare("insert into UserRateAnswer values (:UserID, :AnswerID, :Helpfulness)");
+
+    query.bindValue(":UserID",      userID);
+    query.bindValue(":AnswerID",    answerID);
+    query.bindValue(":Helpfulness", helpful ? 1 : 0);
+    query.exec();
 }
 
 /**
- * Add a new record to UserReadAnswer table
+ * Save an answer clicking event
  */
-void DAO::addUserClickAnswer(int userID, int answerID)
+void DAO::logAnswerClicking(const QString& userName, const QString& email, const QString& link)
 {
-    // find the question id associated with the answer
+    int userID      = updateUser(userName, email);
+    int answerID    = getAnswerID(link);
+
     QSqlQuery query;
     query.exec(tr("select QuestionID from AnswerToQuestion where AnswerID = %1")
                .arg(answerID));
@@ -447,6 +537,8 @@ void DAO::addUserClickAnswer(int userID, int answerID)
         query.bindValue(":time",       getCurrentDateTime());
         query.exec();
     }
+
+    *_logger << "Log answer clicking: " << userName << email << link << endl;
 }
 
 QString DAO::getCurrentDateTime() const {
