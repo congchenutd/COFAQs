@@ -18,7 +18,7 @@ TabWidget::TabWidget(QWidget *parent)
     connect(_tabBar, SIGNAL(closeAllTabs()),         this, SLOT(onCloseAllTabs()));
     connect(_tabBar, SIGNAL(reloadTab(int)),         this, SLOT(onReloadTab(int)));
     connect(_tabBar, SIGNAL(reloadAllTabs()),        this, SLOT(onReloadAllTabs()));
-//    connect(this, SIGNAL(tabCloseRequested(int)),    this, SLOT(closeTab(int)));
+    connect(this, SIGNAL(tabCloseRequested(int)),    this, SLOT(closeTab(int)));
 
     connect(this, SIGNAL(currentChanged(int)), this, SLOT(onCurrentChanged(int)));
 }

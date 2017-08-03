@@ -52,37 +52,6 @@ void Connection::onPingReply(QNetworkReply* reply)
 }
 
 /**
- * Save a Q&A pair, when user has found an answer to her question
- * @param apiSig    - signature of the related API
- * @param question  - search question
- * @param link      - link to the answer page
- * @param title     - title of the answer page
- */
-void Connection::saveFAQ(const QString& apiSig, const QString& question,
-                      const QString& link,   const QString& title)
-{
-    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
-
-    QString url = tr("http://%1:%2/?action=savefaq&username=%3&email=%4&apisig=%5&question=%6")
-            .arg(_settings->getServerIP())
-            .arg(_settings->getServerPort())
-            .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
-            .arg(apiSig)
-            .arg(question);
-
-    // title and link may contain illegal chars for url, percent encode them
-    // Workaround: tr doesn't work correctly for percent encoded strings
-    url += "&title=" + QUrl::toPercentEncoding(title) +
-           "&link="  + QUrl::toPercentEncoding(link);
-
-    qDebug() << "Save Q&A " + url;
-
-    manager->get(QNetworkRequest(QUrl(url)));
-}
-
-/**
  * Query for all Q&A pairs for a given library and class
  * @param libraryName   - library name
  * @param classSig      - class signature
@@ -162,17 +131,17 @@ void Connection::logOpenResult(const QString& apiSig, const QString& question, c
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=openresult&username=%3&email=%4&apisig=%5")
+    QString url = tr("http://%1:%2/?action=openresult&username=%3&email=%4&apisig=%5&question=%6")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
             .arg(_settings->getEmail())
-            .arg(apiSig);
+            .arg(apiSig)
+            .arg(question);
 
     // link may contain illegal chars for url, percent encode them
     // Workaround: tr doesn't work correctly for percent encoded strings
-    url +=  "&question="    + QUrl::toPercentEncoding(question) +
-            "&link="        + QUrl::toPercentEncoding(link) +
+    url +=  "&link="        + QUrl::toPercentEncoding(link) +
             "&title="       + QUrl::toPercentEncoding(title);
 
     manager->get(QNetworkRequest(QUrl(url)));
@@ -184,17 +153,17 @@ void Connection::logCloseResult(const QString& apiSig, const QString& question, 
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=closeresult&username=%3&email=%4&apisig=%5")
+    QString url = tr("http://%1:%2/?action=closeresult&username=%3&email=%4&apisig=%5&question=%6")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
             .arg(_settings->getEmail())
-            .arg(apiSig);
+            .arg(apiSig)
+            .arg(question);
 
     // link may contain illegal chars for url, percent encode them
     // Workaround: tr doesn't work correctly for percent encoded strings
-    url +=  "&question="    + QUrl::toPercentEncoding(question) +
-            "&link="        + QUrl::toPercentEncoding(link);
+    url +=  "&link="        + QUrl::toPercentEncoding(link);
 
     manager->get(QNetworkRequest(QUrl(url)));
     qDebug() << "Close result " + url;
@@ -204,30 +173,34 @@ void Connection::logCloseResult(const QString& apiSig, const QString& question, 
  * Save the event of the user clicked an answer link
  * @param link  - the link to the answer page
  */
-void Connection::logAnswerClicking(const QString& link)
+void Connection::logAnswerClicking(const QString& apiSig, const QString& question, const QString& link)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=answerclicking&username=%3&email=%4")
+    QString url = tr("http://%1:%2/?action=answerclicking&username=%3&email=%4&apisig=%5&question=%6")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail());
+            .arg(_settings->getEmail())
+            .arg(apiSig)
+            .arg(question);
 
     // link may contain illegal chars for url, percent encode them
     // Workaround: tr doesn't work correctly for percent encoded strings
     url += "&link="  + QUrl::toPercentEncoding(link);
-    qDebug() << "Log answer click: " << url;
+    qDebug() << "Log answer click: " << apiSig << question << url;
 
     manager->get(QNetworkRequest(QUrl(url)));
 }
 
-void Connection::logHelpful(const QString& apiSig, const QString& question,
-                            const QString& link, const QString& title, bool helpful)
+void Connection::logRating(const QString& apiSig, const QString& question, const QString& link, bool helpful)
 {
-    if (link.isEmpty() || title.isEmpty())
+    if (apiSig.isEmpty() || question.isEmpty() || link.isEmpty())
+    {
+        qCritical() << "One of them is empty when calling logRating" << "apiSig" << apiSig << "question" << question << "link" << link;
         return;
+    }
 
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
@@ -242,8 +215,7 @@ void Connection::logHelpful(const QString& apiSig, const QString& question,
 
     // link may contain illegal chars for url, percent encode them
     // Workaround: tr doesn't work correctly for percent encoded strings
-    url +=  "&title=" + QUrl::toPercentEncoding(title) +
-            "&link="  + QUrl::toPercentEncoding(link)  +
+    url +=  "&link="  + QUrl::toPercentEncoding(link)  +
             "&helpful=" + (helpful ? "true" : "false");
     manager->get(QNetworkRequest(QUrl(url)));
 

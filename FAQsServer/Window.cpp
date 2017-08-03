@@ -33,6 +33,7 @@ Window::Window(QWidget* parent) :
     connect(ui.btQuit,  &QPushButton::clicked,          this, &Window::onQuit);
     connect(_tray,      &QSystemTrayIcon::activated,    this, &Window::onTrayActivated);
 
+    // redirect qdebug log to a text edit
     Logger* logger = new Logger(new TextEditToQIODeviceAdapter(ui.teLog, this));
     DAO::getInstance()->setLogger(logger);
 

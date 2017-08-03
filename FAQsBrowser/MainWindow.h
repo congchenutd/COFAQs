@@ -43,7 +43,7 @@ private slots:
     void onHelpful();
     void onNotHelpful();
     void onPersonal();
-    void onCloseTab(int index);
+//    void onCloseTab(int index);
     void updateHelpfulButtons();
 
 private:

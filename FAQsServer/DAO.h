@@ -17,24 +17,30 @@ public:
 
     void setLogger(Logger* logger);
 
-    // log API reading history
+    // log API doc reading history
     void logDocumentReading(const QString& userName, const QString& email, const QString& apiSig);
 
+    // opened a search page
     void logSearchStart(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
 
+    // closed a search page
     void logSearchEnd(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
 
+    // opened a search result
     void logOpenResult(const QString& userName, const QString& email, const QString& apiSig,
                        const QString& question, const QString& link, const QString& title);
 
+    // closed a search result
     void logCloseResult(const QString& userName, const QString& email, const QString& apiSig,
                         const QString& question, const QString& link);
 
+    // user clicked helpful or unhelpful
     void logRating(const QString& userName, const QString& email, const QString& apiSig,
-                    const QString& question, const QString& link,  const QString& title, bool helpful);
+                    const QString& question, const QString& link,  bool helpful);
 
-    // log answer clicking history
-    void logAnswerClicking(const QString& userName, const QString& email, const QString& link);
+    // opened an answer link
+    void logAnswerClicking(const QString& userName, const QString& email, const QString& apiSig,
+                           const QString& question, const QString& link);
 
     // query FAQs for an API (class)
     QJsonDocument queryFAQs(const QString& classSig) const;
@@ -56,19 +62,12 @@ private:
     int getQuestionID(const QString& question)  const;
     int getAnswerID  (const QString& link)      const;
 
-    int updateUser    (const QString& userName, const QString& email);  // update single table
+    int updateUser    (const QString& userName, const QString& email);
     int updateAPI     (const QString& signature);
     int updateQuestion(const QString& question, const QString& apiSig);
     int updateAnswer  (const QString& link, const QString& title);
 
-    void updateRelationship(const QString& tableName,
-                            const QString& key1, int value1,
-                            const QString& key2, int value2);
-    void updateQuestionAboutAPI     (int questionID, int apiID);
-    void updateAnswerToQuestion     (int questionID, int answerID);
-    void updateUserProvideAnswer    (int userID,     int answerID);
-
-    void updateUserRateAnswer(int userID, int answerID, bool helpful);
+//    void updateUserRateAnswer(int userID, int apiID, int questionID, int answerID, bool helpful);
 
     void updateLead(int questionID);   // try to make questionID the new lead
 
@@ -78,12 +77,13 @@ private:
     // table -> json
     QJsonObject createAnswerJson    (int answerID) const;  // an answer -> json
     QJsonObject createUserJson      (int userID)   const;  // a user    -> json
-    QJsonArray  createAnswersJson   (const QStringList& questionIDs) const;  // question group -> its answers
-    QJsonArray  createUsersJson     (const QStringList& questionIDs) const;  // question group -> its users
-    QJsonObject createQuestionJson (int leadID) const;  // question group -> json
+    QJsonArray  createAnswersJson   (int apiID, int questionID) const;
+    QJsonArray  createUsersJson     (int userID, int questionID) const;
+    QJsonObject createQuestionJson (int apiID, int leadID) const;  // question group -> json
     QJsonArray  createQuestionsJson(int apiID)  const;  // api            -> its questions
 
     QString getCurrentDateTime() const;
+    QString getDateTimeFormat() const;
 
 private:
     static DAO*         _instance;

@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QTextStream>
 #include <QDebug>
+#include <QUrl>
 
 //Examples:
 //Input:
@@ -157,9 +158,15 @@ QByteArray SnippetCreator::createQuestions(const QJsonObject& joAPI) const
                 if(title.isEmpty())
                     title = "Link";
 
+                QString apiSig      = joAPI.value("apisig").toString();
+                QString question    = QUrl::toPercentEncoding(joQuestion.value("question").toString()); // encode non-ascii chars
+
+                // format answer
                 Template tAnswer("./Templates/Answer.html");
-                tAnswer.setValue("Title", title);                // format answer
-                tAnswer.setValue("Link",  link);
+                tAnswer.setValue("Title",       title);
+                tAnswer.setValue("Link",        link);
+                tAnswer.setValue("API",         "#API#=" + apiSig);
+                tAnswer.setValue("Question",    "#Question#=" + question);
                 tQuestion.addValue("Answer", tAnswer.toHTML());  // add to the question
             }
         }

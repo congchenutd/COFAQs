@@ -102,6 +102,8 @@ void JavaSE7Visitor::addFAQ(const QWebPage* page, const QJsonObject& joFAQ)
     API api = API::fromSignature(joFAQ.value("apisig").toString());
     QString html = joFAQ.value("html").toString();  // html content of the FAQ section
 
+    qDebug() << "Embedded HTML:" << html;
+
     if(api.getMethodSignature().isEmpty())   // for class
     {
         QWebElement e = getRootElement(page).findFirst("div[class=description]");

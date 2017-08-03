@@ -26,6 +26,13 @@ void WebPage::onSslErrors(QNetworkReply* reply) {
     reply->ignoreSslErrors();
 }
 
+/**
+ * Overwrite default navigation actions
+ * @param frame     - web frame
+ * @param request   - contains url
+ * @param type      - nagivation type
+ * @return          - true for default action
+ */
 bool WebPage::acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& request, NavigationType type)
 {
     if(type == NavigationTypeLinkClicked)
@@ -43,7 +50,7 @@ bool WebPage::acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& r
         // document page
         if(thisView->getRole() == WebView::DOC_ROLE)
         {
-            QString url = request.url().toString();
+            QString url = QUrl::fromPercentEncoding(request.url().toString().toUtf8()); // decode non-ascii chars
 
             // document link clicked
             if(url.startsWith(Settings::getInstance()->getDocUrl()))
@@ -51,10 +58,18 @@ bool WebPage::acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& r
             // external link (answer link) clicked
             else
             {
-                Connection::getInstance()->logAnswerClicking(url);
-                WebView* newView = MainWindow::getInstance()->newTab(WebView::RESULT_ROLE);
-                newView->setAPI(thisView->getAPI());    // transfer the attributes
-                newView->load(request);
+                // extract embedded apisig and question
+                int apiIndex = url.indexOf("#API#=");
+                int questionIndex = url.indexOf("#Question#=");
+                QString apiSig = url.mid(apiIndex + 6, questionIndex - apiIndex - 6);
+                QString question = url.mid(questionIndex + 11);
+                url = url.left(apiIndex);
+
+                Connection::getInstance()->logAnswerClicking(apiSig, question, url);
+                WebView* newView = MainWindow::getInstance()->newTab(WebView::ANSWER_ROLE);
+                newView->setAPI(API::fromSignature(apiSig));    // transfer the attributes
+                newView->setQuestion(question);
+                newView->load(url);
                 return false;
             }
         }

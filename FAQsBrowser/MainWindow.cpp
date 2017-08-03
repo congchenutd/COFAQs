@@ -84,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(_tabWidget, SIGNAL(currentTitleChanged(QString)),   this, SLOT(onCurrentTitleChanged(QString)));
     connect(_tabWidget, SIGNAL(historyChanged()),               this, SLOT(onHistoryChanged()));
     connect(_tabWidget, SIGNAL(linkHovered(QString)), statusBar(), SLOT(showMessage(QString)));
-    connect(_tabWidget, SIGNAL(tabCloseRequested(int)),         this, SLOT(onCloseTab(int)));
+//    connect(_tabWidget, SIGNAL(tabCloseRequested(int)),         this, SLOT(onCloseTab(int)));
     connect(_tabWidget, SIGNAL(titleLoaded()),                  this, SLOT(updateHelpfulButtons()));
     connect(_tabWidget, SIGNAL(currentChanged(int)),            this, SLOT(updateHelpfulButtons()));
 
@@ -235,10 +235,9 @@ void MainWindow::onReloadStop()
 void MainWindow::onHelpful()
 {
     if(WebView* webView = currentWebView())
-        Connection::getInstance()->logHelpful(webView->getAPI().toSignature(),
+        Connection::getInstance()->logRating(webView->getAPI().toSignature(),
                                               webView->getQuestion(),
                                               webView->url().toString(),
-                                              webView->title(),
                                               true);
 
     _tabWidget->closeTab(_tabWidget->currentIndex());
@@ -247,33 +246,33 @@ void MainWindow::onHelpful()
 void MainWindow::onNotHelpful()
 {
     if(WebView* webView = currentWebView())
-        Connection::getInstance()->logHelpful(webView->getAPI().toSignature(),
+        Connection::getInstance()->logRating(webView->getAPI().toSignature(),
                                               webView->getQuestion(),
                                               webView->url().toString(),
-                                              webView->title(),
                                               false);
 
     _tabWidget->closeTab(_tabWidget->currentIndex());
 }
 
-void MainWindow::onCloseTab(int index)
-{
-    WebView* webView = _tabWidget->getWebView(index);
-    if (webView->getRole() == WebView::RESULT_ROLE)
-        Connection::getInstance()->logHelpful(webView->getAPI().toSignature(),
-                                              webView->getQuestion(),
-                                              webView->url().toString(),
-                                              webView->title(),
-                                              false);
+//void MainWindow::onCloseTab(int index)
+//{
+////    WebView* webView = _tabWidget->getWebView(index);
+////    if (webView->getRole() == WebView::RESULT_ROLE)
+////        Connection::getInstance()->logHelpful(webView->getAPI().toSignature(),
+////                                              webView->getQuestion(),
+////                                              webView->url().toString(),
+////                                              webView->title(),
+////                                              false);
 
-    _tabWidget->closeTab(index);
-}
+//    _tabWidget->closeTab(index);
+//}
 
 void MainWindow::updateHelpfulButtons()
 {
     if(WebView* webView = currentWebView())
     {
-        bool showHelpful = webView->getRole() == WebView::RESULT_ROLE && !webView->title().isEmpty();
+        WebView::PageRole role = webView->getRole();
+        bool showHelpful = (role == WebView::RESULT_ROLE || role == WebView::ANSWER_ROLE) && !webView->title().isEmpty();
         ui.actionHelpful   ->setVisible(showHelpful);
         ui.actionNotHelpful->setVisible(showHelpful);
     }

@@ -26,15 +26,10 @@ public:
 
     void logCloseResult(const QString& apiSig, const QString& question, const QString& link);
 
-    // save a Q&A pair
-    void saveFAQ(const QString& apiSig, const QString& question,
-                 const QString& link = QString(), const QString& title = QString());
-
     // Log answer reading
-    void logAnswerClicking(const QString& link);    // user clicked an answer link
+    void logAnswerClicking(const QString& apiSig, const QString& question, const QString& link);    // user clicked an answer link
 
-    void logHelpful(const QString& apiSig, const QString& question,
-                    const QString& link, const QString& title, bool helpful);
+    void logRating(const QString& apiSig, const QString& question, const QString& link, bool helpful);
 
     // query for all Q&A pairs related to a given API
     void queryFAQs(const QString& libraryName, const QString& classSig);

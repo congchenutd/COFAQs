@@ -14,7 +14,7 @@ class WebView : public QWebView
     Q_OBJECT
 
 public:
-    typedef enum {NULL_ROLE, DOC_ROLE, SEARCH_ROLE, RESULT_ROLE, PROFILE_ROLE} PageRole;
+    typedef enum {NULL_ROLE, DOC_ROLE, SEARCH_ROLE, RESULT_ROLE, ANSWER_ROLE, PROFILE_ROLE} PageRole;
 
 public:
     WebView(QWidget* parent = 0);

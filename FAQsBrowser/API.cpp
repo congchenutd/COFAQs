@@ -1,6 +1,7 @@
 #include "API.h"
 #include <QJsonObject>
 #include <QStringList>
+#include <QDebug>
 
 // e.g., java.util.ArrayList<E> -> ArrayList
 QString API::getClassName() const {
@@ -54,6 +55,12 @@ API API::fromSignature(const QString& sig)
         signature = signature.left(signature.lastIndexOf(methodSig) - 1);
     }
 
+    int semicolon = signature.indexOf(";"); // separator of library and class
+    if (semicolon > -1)
+    {
+        result.setLibrary(signature.left(semicolon));
+        signature = signature.mid(semicolon + 1);
+    }
     result.setClassSignature(signature);
     return result;
 }

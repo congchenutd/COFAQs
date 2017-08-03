@@ -187,7 +187,6 @@ void ClientHandler::onRateAnswer(const Parameters& params, QHttpResponse* res)
             params["apisig"],
             params["question"],
             QUrl::fromPercentEncoding(params["link"] .toUtf8()),
-            QUrl::fromPercentEncoding(params["title"].toUtf8()),
             params["helpful"].toLower() == "true");
 
     res->addHeader("Content-Type", "text/html");
@@ -208,6 +207,8 @@ void ClientHandler::onAnswerClicking(const Parameters& params, QHttpResponse* re
     _dao->logAnswerClicking(
             params["username"],
             params["email"],
+            params["apisig"],
+            params["question"],
             QUrl::fromPercentEncoding(params["link"].toUtf8()));
 
     res->addHeader("Content-Type", "text/html");
