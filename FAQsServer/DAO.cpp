@@ -71,7 +71,8 @@ DAO::DAO()
                QuestionID   int references Questions    (ID) on delete cascade on update cascade, \
                AnswerID     int references Answers      (ID) on delete cascade on update cascade, \
                Helpful      int, \
-               primary key (UserID, APIID, QuestionID, AnswerID))");
+               Time         varchar, \
+               primary key (UserID, APIID, QuestionID, AnswerID, Time))");
 
     query.exec("create table UserSearchQuestion ( \
                UserID       int references Users        (ID) on delete cascade on update cascade, \
@@ -448,45 +449,19 @@ void DAO::logRating(const QString& userName, const QString& email, const QString
     int questionID  = updateQuestion(question, apiSig);
 
     QSqlQuery query;
-    query.exec(tr("select * from UserRateAnswer where UserID = %1 and APIID = %2 and QuestionID = %3 and AnswerID = %4")
-               .arg(userID).arg(apiID).arg(questionID).arg(answerID));
-
-    if (query.next())
-        query.prepare("update UserRateAnswer set Helpful = :Helpfulness \
-                      where UserID = :UserID and APIID = :APIID and QuestionID = :QuestionID and AnswerID = :AnswerID");
-    else
-        query.prepare("insert into UserRateAnswer values (:UserID, :APIID, :QuestionID, :AnswerID, :Helpfulness)");
+    query.prepare("insert into UserRateAnswer values (:UserID, :APIID, :QuestionID, :AnswerID, :Helpfulness, :Time)");
 
     query.bindValue(":UserID",      userID);
     query.bindValue(":APIID",       apiID);
     query.bindValue(":QuestionID",  questionID);
     query.bindValue(":AnswerID",    answerID);
-    query.bindValue(":Helpfulness", helpful ? 1 : 0);
+    query.bindValue(":Helpfulness", helpful ? 1 : -1);
+    query.bindValue(":Time",        getCurrentDateTime());
     query.exec();
 
     *_logger << userName << "rated answer:" << link << (helpful ? "helpful" : "unhelpful")
-             << "for question:" << question << "about API:" << apiSig << endl;
+             << "for question:" << question << "about API:" << apiSig << "at:" << getCurrentDateTime() << endl;
 }
-
-//void DAO::updateUserRateAnswer(int userID, int apiID, int questionID, int answerID, bool helpful)
-//{
-//    QSqlQuery query;
-//    query.exec(tr("select * from UserRateAnswer where UserID = %1 and APIID = %2 and QuestionID = %3 and AnswerID = %4")
-//               .arg(userID).arg(apiID).arg(questionID).arg(answerID));
-
-//    if (query.next())
-//        query.prepare("update UserRateAnswer set Helpful = :Helpfulness \
-//                      where UserID = :UserID and APIID = :APIID and QuestionID = :QuestionID and AnswerID = :AnswerID");
-//    else
-//        query.prepare("insert into UserRateAnswer values (:UserID, :APIID, :QuestionID, :AnswerID, :Helpfulness)");
-
-//    query.bindValue(":UserID",      userID);
-//    query.bindValue(":APIID",       apiID);
-//    query.bindValue(":QuestionID",  questionID);
-//    query.bindValue(":AnswerID",    answerID);
-//    query.bindValue(":Helpfulness", helpful ? 1 : 0);
-//    query.exec();
-//}
 
 /**
  * Save an answer clicking event
@@ -616,8 +591,13 @@ QJsonArray DAO::createAnswersJson(int apiID, int questionID) const
 {
     QJsonArray result;
     QSqlQuery query;
-    query.exec(tr("select distinct AnswerID from UserRateAnswer \
-                   where APIID = %1 and QuestionID = %2 and Helpful = 1").arg(apiID).arg(questionID));
+    query.exec(tr("select AnswerID from ( \
+                  select AnswerID, sum(Helpful) as Helpful \
+                  from UserRateAnswer \
+                  where APIID = %1 and QuestionID = %2 \
+                  group by AnswerID) \
+                  where Helpful > 0 \
+                  order by Helpful desc").arg(apiID).arg(questionID));
     while(query.next())
     {
         QJsonObject answerJson = createAnswerJson(query.value(0).toInt());

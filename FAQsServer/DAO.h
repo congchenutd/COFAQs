@@ -67,8 +67,6 @@ private:
     int updateQuestion(const QString& question, const QString& apiSig);
     int updateAnswer  (const QString& link, const QString& title);
 
-//    void updateUserRateAnswer(int userID, int apiID, int questionID, int answerID, bool helpful);
-
     void updateLead(int questionID);   // try to make questionID the new lead
 
     // initiate comparison between the question and other lead questions associated with apiID
