@@ -20,11 +20,15 @@ public:
     // log API doc reading history
     void logDocumentReading(const QString& userName, const QString& email, const QString& apiSig);
 
+    void logOpenDocument(const QString& userName, const QString& email, const QString& apiSig);
+
+    void logCloseDocument(const QString& userName, const QString& email, const QString& apiSig);
+
     // opened a search page
-    void logSearchStart(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
+    void logOpenSearch(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
 
     // closed a search page
-    void logSearchEnd(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
+    void logCloseSearch(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
 
     // opened a search result
     void logOpenResult(const QString& userName, const QString& email, const QString& apiSig,
@@ -41,6 +45,12 @@ public:
     // opened an answer link
     void logAnswerClicking(const QString& userName, const QString& email, const QString& apiSig,
                            const QString& question, const QString& link);
+
+    void logOpenAnswer(const QString& userName, const QString& email, const QString& apiSig,
+                       const QString& question, const QString& link);
+
+    void logCloseAnswer(const QString& userName, const QString& email, const QString& apiSig,
+                        const QString& question, const QString& link);
 
     // query FAQs for an API (class)
     QJsonDocument queryFAQs(const QString& classSig) const;
@@ -76,9 +86,9 @@ private:
     QJsonObject createAnswerJson    (int answerID) const;  // an answer -> json
     QJsonObject createUserJson      (int userID)   const;  // a user    -> json
     QJsonArray  createAnswersJson   (int apiID, int questionID) const;
-    QJsonArray  createUsersJson     (int userID, int questionID) const;
-    QJsonObject createQuestionJson (int apiID, int leadID) const;  // question group -> json
-    QJsonArray  createQuestionsJson(int apiID)  const;  // api            -> its questions
+    QJsonArray  createUsersJson     (int apiID, int questionID) const;
+    QJsonObject createQuestionJson  (int apiID, int leadID) const;  // question group -> json
+    QJsonArray  createQuestionsJson (int apiID)  const;             // api            -> its questions
 
     QString getCurrentDateTime() const;
     QString getDateTimeFormat() const;

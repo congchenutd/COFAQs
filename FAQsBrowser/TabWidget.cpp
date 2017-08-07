@@ -70,7 +70,7 @@ int TabWidget::createSearchTab(const API& api, const QString& query, const QStri
 
     // Previous search is ended
     if (index > -1)
-        Connection::getInstance()->logSearchEnd(webView->getAPI().toSignature(), webView->getQuestion());
+        Connection::getInstance()->logCloseSearch(webView->getAPI().toSignature(), webView->getQuestion());
 
     // load search page
     webView->setAPI(api);
@@ -89,7 +89,7 @@ void TabWidget::onAPISearch(const API& api)
         setCurrentIndex(
             createSearchTab(api, dlg.getQuery(), dlg.getQuestion())   // go searching
         );
-        Connection::getInstance()->logSearchStart(api.toSignature(), dlg.getQuestion());
+        Connection::getInstance()->logOpenSearch(api.toSignature(), dlg.getQuestion());
     }
 }
 
@@ -126,7 +126,6 @@ void TabWidget::onTitleLoaded(const QString& title)
     if (title.isEmpty())
         return;
 
-    qDebug() << "title loaded" << title;
     WebView* webView = qobject_cast<WebView*>(sender());
     int index = indexOf(webView);
     if(-1 != index && currentIndex() == index)
@@ -187,7 +186,7 @@ void TabWidget::closeTab(int index)
             return;
 
         if (role == WebView::SEARCH_ROLE)
-            Connection::getInstance()->logSearchEnd(webView->getAPI().toSignature(), webView->getQuestion());
+            Connection::getInstance()->logCloseSearch(webView->getAPI().toSignature(), webView->getQuestion());
         else if (role == WebView::RESULT_ROLE)
             Connection::getInstance()->logCloseResult(webView->getAPI().toSignature(), webView->getQuestion(), webView->url().toString());
     }

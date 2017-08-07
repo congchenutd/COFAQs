@@ -92,29 +92,44 @@ void Connection::logDocumentReading(const QString& apiSig)
     manager->get(QNetworkRequest(QUrl(url)));
 }
 
-void Connection::logSearchStart(const QString& apiSig, const QString& question)
+void Connection::logOpenDocument(const QString& apiSig)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=searchstart&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=opendoc&username=%3&email=%4&apisig=%5")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
             .arg(_settings->getEmail())
-            .arg(apiSig)
-            .arg(question);
-    manager->get(QNetworkRequest(QUrl(url)));
+            .arg(apiSig);
+    qDebug() << "Log open API document:" << url;
 
-    qDebug() << "Search start " + url;
+    manager->get(QNetworkRequest(QUrl(url)));
 }
 
-void Connection::logSearchEnd(const QString& apiSig, const QString& question)
+void Connection::logCloseDocument(const QString& apiSig)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=searchend&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=closedoc&username=%3&email=%4&apisig=%5")
+            .arg(_settings->getServerIP())
+            .arg(_settings->getServerPort())
+            .arg(_settings->getUserName())
+            .arg(_settings->getEmail())
+            .arg(apiSig);
+    qDebug() << "Log close API document:" << url;
+
+    manager->get(QNetworkRequest(QUrl(url)));
+}
+
+void Connection::logOpenSearch(const QString& apiSig, const QString& question)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
+
+    QString url = tr("http://%1:%2/?action=opensearch&username=%3&email=%4&apisig=%5&question=%6")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
@@ -123,7 +138,24 @@ void Connection::logSearchEnd(const QString& apiSig, const QString& question)
             .arg(question);
     manager->get(QNetworkRequest(QUrl(url)));
 
-    qDebug() << "Search end " + url;
+    qDebug() << "Open search" + url;
+}
+
+void Connection::logCloseSearch(const QString& apiSig, const QString& question)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
+
+    QString url = tr("http://%1:%2/?action=closesearch&username=%3&email=%4&apisig=%5&question=%6")
+            .arg(_settings->getServerIP())
+            .arg(_settings->getServerPort())
+            .arg(_settings->getUserName())
+            .arg(_settings->getEmail())
+            .arg(apiSig)
+            .arg(question);
+    manager->get(QNetworkRequest(QUrl(url)));
+
+    qDebug() << "Close search" + url;
 }
 
 void Connection::logOpenResult(const QString& apiSig, const QString& question, const QString& link, const QString& title)
@@ -192,6 +224,16 @@ void Connection::logAnswerClicking(const QString& apiSig, const QString& questio
     qDebug() << "Log answer click: " << apiSig << question << url;
 
     manager->get(QNetworkRequest(QUrl(url)));
+}
+
+void Connection::logOpenAnswer(const QString& apiSig, const QString& question, const QString& link)
+{
+
+}
+
+void Connection::logCloseAnswer(const QString& apiSig, const QString& question, const QString& link)
+{
+
 }
 
 void Connection::logRating(const QString& apiSig, const QString& question, const QString& link, bool helpful)

@@ -37,12 +37,14 @@ ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
         QString action = params["action"];
         if(action == "ping")
             onPing(params, res);
-        else if (action == "docreading")
-            onDocumentReading(params, res);
-        else if (action == "searchstart")
-            onSearchStart(params, res);
-        else if (action == "searchend")
-            onSearchEnd(params, res);
+        else if (action == "opendoc")
+            onOpenDocument(params, res);
+        else if (action == "closedoc")
+            onCloseDocument(params, res);
+        else if (action == "opensearch")
+            onOpenSearch(params, res);
+        else if (action == "closesearch")
+            onCloseSearch(params, res);
         else if (action == "openresult")
             onOpenResult(params, res);
         else if (action == "closeresult")
@@ -101,26 +103,40 @@ void ClientHandler::onPing(const Parameters& params, QHttpResponse* res)
 }
 
 /**
- * Process log document reading request
- * @param params    - parameters of the request
- * @param res       - response
+ * Log start document reading
  */
-void ClientHandler::onDocumentReading(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onOpenDocument(const ClientHandler::Parameters &params, QHttpResponse *res)
 {
-    _dao->logDocumentReading(
+    _dao->logOpenDocument(
             params["username"],
             params["email"],
             params["apisig"]);
 
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
-    res->write(tr("Your API is logged").toUtf8());
+    res->write(tr("Document reading start is logged").toUtf8());
     res->end();
 }
 
-void ClientHandler::onSearchStart(const Parameters& params, QHttpResponse* res)
+/**
+ * Log end document reading
+ */
+void ClientHandler::onCloseDocument(const ClientHandler::Parameters &params, QHttpResponse *res)
 {
-    _dao->logSearchStart(
+    _dao->logCloseDocument(
+            params["username"],
+            params["email"],
+            params["apisig"]);
+
+    res->addHeader("Content-Type", "text/html");
+    res->setStatusCode(qhttp::ESTATUS_OK);
+    res->write(tr("Document reading end is logged").toUtf8());
+    res->end();
+}
+
+void ClientHandler::onOpenSearch(const Parameters& params, QHttpResponse* res)
+{
+    _dao->logOpenSearch(
             params["username"],
             params["email"],
             params["apisig"],
@@ -132,9 +148,9 @@ void ClientHandler::onSearchStart(const Parameters& params, QHttpResponse* res)
     res->end();
 }
 
-void ClientHandler::onSearchEnd(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onCloseSearch(const Parameters& params, QHttpResponse* res)
 {
-    _dao->logSearchEnd(
+    _dao->logCloseSearch(
             params["username"],
             params["email"],
             params["apisig"],
@@ -215,6 +231,16 @@ void ClientHandler::onAnswerClicking(const Parameters& params, QHttpResponse* re
     res->setStatusCode(qhttp::ESTATUS_OK);
     res->write(tr("Your Answer is logged").toUtf8());
     res->end();
+}
+
+void ClientHandler::onOpenAnswer(const Parameters& params, QHttpResponse* res)
+{
+
+}
+
+void ClientHandler::onCloseAnswer(const Parameters& params, QHttpResponse* res)
+{
+
 }
 
 /**

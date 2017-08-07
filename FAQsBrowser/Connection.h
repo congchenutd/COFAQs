@@ -18,9 +18,13 @@ public:
     // Log API reading
     void logDocumentReading(const QString& apiSig);  // user viewed the api doc
 
-    void logSearchStart(const QString& apiSig, const QString& question);
+    void logOpenDocument(const QString& apiSig);
 
-    void logSearchEnd(const QString& apiSig, const QString& question);
+    void logCloseDocument(const QString& apiSig);
+
+    void logOpenSearch(const QString& apiSig, const QString& question);
+
+    void logCloseSearch(const QString& apiSig, const QString& question);
 
     void logOpenResult(const QString& apiSig, const QString& question, const QString& link, const QString& title);
 
@@ -28,6 +32,10 @@ public:
 
     // Log answer reading
     void logAnswerClicking(const QString& apiSig, const QString& question, const QString& link);    // user clicked an answer link
+
+    void logOpenAnswer  (const QString& apiSig, const QString& question, const QString& link);
+
+    void logCloseAnswer (const QString& apiSig, const QString& question, const QString& link);
 
     void logRating(const QString& apiSig, const QString& question, const QString& link, bool helpful);
 

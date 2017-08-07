@@ -94,8 +94,19 @@ void WebView::onProgress(int progress) {
 
 void WebView::onTitleChanged(const QString& title)
 {
-    if (getRole() == RESULT_ROLE && !title.isEmpty())
+    qDebug() << "Title changed" << title;
+
+    if (title.isEmpty())
+        return;
+
+    if (getRole() == RESULT_ROLE)
         Connection::getInstance()->logOpenResult(getAPI().toSignature(), getQuestion(), url().toString(), title);
+
+//    else if (getRole() == ANSWER_ROLE)
+//        qDebug() << "Opened answer page" << url().toString();
+
+//    else if (getRole() == DOC_ROLE)
+//        qDebug() << "Opened doc page" << getAPI().toSignature();
 }
 
 void WebView::onLoaded()
