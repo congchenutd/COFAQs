@@ -17,6 +17,10 @@ public:
 
     void setLogger(Logger* logger);
 
+    void login(const QString& userName, const QString& email);
+
+    void logout(const QString& userName, const QString& email);
+
     // log API doc reading history
     void logDocumentReading(const QString& userName, const QString& email, const QString& apiSig);
 
@@ -43,9 +47,6 @@ public:
                     const QString& question, const QString& link,  bool helpful);
 
     // opened an answer link
-    void logAnswerClicking(const QString& userName, const QString& email, const QString& apiSig,
-                           const QString& question, const QString& link);
-
     void logOpenAnswer(const QString& userName, const QString& email, const QString& apiSig,
                        const QString& question, const QString& link);
 

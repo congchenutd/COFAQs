@@ -63,8 +63,9 @@ DAO::DAO()
                APIID        int references APIs         (ID) on delete cascade on update cascade, \
                QuestionID   int references Questions    (ID) on delete cascade on update cascade, \
                AnswerID     int references Answers      (ID) on delete cascade on update cascade, \
-               Time         varchar, \
-               primary key (UserID, APIID, QuestionID, AnswerID, Time))");
+               StartTime    varchar, \
+               EndTime      varchar, \
+               primary key (UserID, APIID, QuestionID, AnswerID, StartTime))");
 
     query.exec("create table UserRateAnswer ( \
                UserID       int references Users        (ID) on delete cascade on update cascade, \
@@ -87,10 +88,16 @@ DAO::DAO()
                UserID       int references Users        (ID) on delete cascade on update cascade, \
                APIID        int references APIs         (ID) on delete cascade on update cascade, \
                QuestionID   int references Questions    (ID) on delete cascade on update cascade, \
-               AnswerID     int references Answers  (ID) on delete cascade on update cascade, \
+               AnswerID     int references Answers      (ID) on delete cascade on update cascade, \
                StartTime    varchar, \
                EndTime      varchar, \
                primary key (UserID, APIID, QuestionID, AnswerID, StartTime))");
+
+    query.exec("create table UserLogin ( \
+               UserID   int references Users        (ID) on delete cascade on update cascade, \
+               InOut    int, \
+               Time     varchar, \
+               primary key (UserID, Time))");
 
     _comparer = new SimilarityComparer(this);
     connect(_comparer, SIGNAL(comparisonResult  (QString,QString,qreal)),
@@ -320,6 +327,30 @@ int DAO::updateAnswer(const QString& link, const QString& title)
     return id;
 }
 
+void DAO::login(const QString& userName, const QString& email)
+{
+    int userID = updateUser(userName, email);
+    QSqlQuery query;
+    query.prepare("insert into UserLogin values (:UserID, 1, :Time)");
+    query.bindValue(":UserID", userID);
+    query.bindValue(":Time",   getCurrentDateTime());
+    query.exec();
+
+    *_logger << userName << "logged in at" << getCurrentDateTime() << endl;
+}
+
+void DAO::logout(const QString& userName, const QString& email)
+{
+    int userID = updateUser(userName, email);
+    QSqlQuery query;
+    query.prepare("insert into UserLogin values (:UserID, 0, :Time)");
+    query.bindValue(":UserID", userID);
+    query.bindValue(":Time",   getCurrentDateTime());
+    query.exec();
+
+    *_logger << userName << "logged out at" << getCurrentDateTime() << endl;
+}
+
 /**
  * Save document reading event
  * @param userName  - user names
@@ -423,7 +454,7 @@ void DAO::logCloseSearch(const QString& userName, const QString& email, const QS
         query.bindValue(":EndTime",     getCurrentDateTime());
         query.exec();
 
-        *_logger << userName << "ended search question:" << question << "for API:" << apiSig << endl;
+        *_logger << userName << "closed search for question:" << question << "for API:" << apiSig << endl;
     }
 }
 
@@ -504,10 +535,7 @@ void DAO::logRating(const QString& userName, const QString& email, const QString
              << "for question:" << question << "about API:" << apiSig << "at:" << getCurrentDateTime() << endl;
 }
 
-/**
- * Save an answer clicking event
- */
-void DAO::logAnswerClicking(const QString& userName, const QString& email, const QString& apiSig, const QString& question, const QString& link)
+void DAO::logOpenAnswer(const QString& userName, const QString& email, const QString& apiSig, const QString& question, const QString& link)
 {
     int userID      = updateUser(userName, email);
     int apiID       = getAPIID(apiSig);
@@ -516,25 +544,46 @@ void DAO::logAnswerClicking(const QString& userName, const QString& email, const
 
     // add a UserReadAnswer record
     QSqlQuery query;
-    query.prepare("insert into UserReadAnswer values (:UserID, :ApiID, :QuestionID, :AnswerID, :Time)");
+    query.prepare("insert into UserReadAnswer values (:UserID, :ApiID, :QuestionID, :AnswerID, :StartTime, \'\')");
     query.bindValue(":UserID",      userID);
     query.bindValue(":ApiID",       apiID);
     query.bindValue(":QuestionID",  questionID);
     query.bindValue(":AnswerID",    answerID);
-    query.bindValue(":Time",        getCurrentDateTime());
+    query.bindValue(":StartTime",   getCurrentDateTime());
     query.exec();
 
-    *_logger << userName << "opened answer link: " << link << "for question:" << question << "about API:" << apiSig << endl;
-}
+    qDebug() << query.lastError().text();
 
-void DAO::logOpenAnswer(const QString& userName, const QString& email, const QString& apiSig, const QString& question, const QString& link)
-{
-
+    *_logger << userName << "opened answer page:" << link << "for question:" << question << "about API:" << apiSig << endl;
 }
 
 void DAO::logCloseAnswer(const QString& userName, const QString& email, const QString& apiSig, const QString& question, const QString& link)
 {
+    int userID      = updateUser(userName, email);
+    int apiID       = getAPIID(apiSig);
+    int questionID  = getQuestionID(question);
+    int answerID    = getAnswerID(link);
 
+    // find start time of this result viewing
+    QSqlQuery query;
+    query.exec(tr("select StartTime from UserReadAnswer where UserID = %1 and QuestionID = %2 and APIID = %3 and AnswerID = \'%4\' \
+                   order by StartTime desc").arg(userID).arg(questionID).arg(apiID).arg(answerID));
+    if (query.next())
+    {
+        QString startTime = query.value(0).toString();
+        query.prepare("update UserReadAnswer set EndTime = :EndTime \
+                       where UserID = :UserID and QuestionID = :QuestionID and APIID = :APIID and AnswerID = :AnswerID and StartTime = :StartTime");
+        query.bindValue(":UserID",      userID);
+        query.bindValue(":APIID",       apiID);
+        query.bindValue(":QuestionID",  questionID);
+        query.bindValue(":AnswerID",    answerID);
+        query.bindValue(":StartTime",   startTime);
+        query.bindValue(":EndTime",     getCurrentDateTime());  // update end time
+        query.exec();
+    }
+
+    *_logger << userName << "closed answer page:" << link << "for question:" << question
+             << "about API:" << apiSig << "at:" << getCurrentDateTime() << endl;
 }
 
 QString DAO::getCurrentDateTime() const {

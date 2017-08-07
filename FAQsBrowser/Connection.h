@@ -15,6 +15,10 @@ public:
     static Connection* getInstance();   // singleton
     void ping();    // check if the server is alive
 
+    void login(const QString& userName, const QString& email);
+
+    void logout(const QString& userName, const QString& email);
+
     // Log API reading
     void logDocumentReading(const QString& apiSig);  // user viewed the api doc
 

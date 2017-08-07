@@ -35,6 +35,9 @@ void WebPage::onSslErrors(QNetworkReply* reply) {
  */
 bool WebPage::acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& request, NavigationType type)
 {
+    WebView* thisView = static_cast<WebView*>(view());
+    QString url = QUrl::fromPercentEncoding(request.url().toString().toUtf8()); // decode non-ascii chars
+
     if(type == NavigationTypeLinkClicked)
     {
         // personal profile link
@@ -44,52 +47,61 @@ bool WebPage::acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& r
             MainWindow::getInstance()->newPersonalTab(userName);
             return false;
         }
-    }
 
-    // document page
-    WebView* thisView = static_cast<WebView*>(view());
-    if(thisView->getRole() == WebView::DOC_ROLE)
-    {
-        QString url = QUrl::fromPercentEncoding(request.url().toString().toUtf8()); // decode non-ascii chars
-
-        // document link clicked
-        if(url.startsWith(Settings::getInstance()->getDocUrl()))
+        // document page
+        if(thisView->getRole() == WebView::DOC_ROLE)
         {
-            static QString previousSignature;
-            if (!previousSignature.isEmpty())
-                Connection::getInstance()->logCloseDocument(previousSignature);
+            // document link clicked
+            if(url.startsWith(Settings::getInstance()->getDocUrl()))
+            {
+                // log close previous document
+                static QString previousSignature;
+                if (!previousSignature.isEmpty())
+                    Connection::getInstance()->logCloseDocument(previousSignature);
 
-            QString signature = _visitor->urlToAPI(url).toSignature();
-            Connection::getInstance()->logOpenDocument(signature);
-            previousSignature = signature;
+                // log open new document
+                API api = _visitor->urlToAPI(url);
+                QString signature = api.toSignature();
+                Connection::getInstance()->logOpenDocument(signature);
+                previousSignature = signature;
+                thisView->setAPI(api);
+            }
+            // external link (answer link) clicked
+            else
+            {
+                // extract embedded apisig and question
+                int apiIndex = url.indexOf("#API#=");
+                int questionIndex = url.indexOf("#Question#=");
+                QString apiSig = url.mid(apiIndex + 6, questionIndex - apiIndex - 6);
+                QString question = url.mid(questionIndex + 11);
+                url = url.left(apiIndex);
+
+                // log answer clicking
+                Connection::getInstance()->logAnswerClicking(apiSig, question, url);
+
+                // open new tab
+                WebView* newView = MainWindow::getInstance()->newTab(WebView::ANSWER_ROLE);
+                newView->setAPI(API::fromSignature(apiSig));    // transfer the attributes
+                newView->setQuestion(question);
+                newView->load(url);
+                return false;
+            }
         }
-        // external link (answer link) clicked
-        else
-        {
-            // extract embedded apisig and question
-            int apiIndex = url.indexOf("#API#=");
-            int questionIndex = url.indexOf("#Question#=");
-            QString apiSig = url.mid(apiIndex + 6, questionIndex - apiIndex - 6);
-            QString question = url.mid(questionIndex + 11);
-            url = url.left(apiIndex);
 
-            Connection::getInstance()->logAnswerClicking(apiSig, question, url);
-            WebView* newView = MainWindow::getInstance()->newTab(WebView::ANSWER_ROLE);
-            newView->setAPI(API::fromSignature(apiSig));    // transfer the attributes
-            newView->setQuestion(question);
-            newView->load(url);
+        // links on the search page open in new tab
+        else if(thisView->getRole() == WebView::SEARCH_ROLE)
+        {
+            WebView* newView = MainWindow::getInstance()->newTab(WebView::RESULT_ROLE);
+            newView->setAPI     (thisView->getAPI());    // transfer the attributes
+            newView->setQuestion(thisView->getQuestion());
+            newView->load(request);
             return false;
         }
     }
 
-    // links on the search page open in new tab
-    else if(thisView->getRole() == WebView::SEARCH_ROLE)
+    else if (type == NavigationTypeBackOrForward || type == NavigationTypeReload)
     {
-        WebView* newView = MainWindow::getInstance()->newTab(WebView::RESULT_ROLE);
-        newView->setAPI     (thisView->getAPI());    // transfer the attributes
-        newView->setQuestion(thisView->getQuestion());
-        newView->load(request);
-        return false;
+        qDebug() << "Doc page back, forward, or reloaded" << url;
     }
 
     return QWebPage::acceptNavigationRequest(frame, request, type);

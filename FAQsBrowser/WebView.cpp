@@ -102,11 +102,8 @@ void WebView::onTitleChanged(const QString& title)
     if (getRole() == RESULT_ROLE)
         Connection::getInstance()->logOpenResult(getAPI().toSignature(), getQuestion(), url().toString(), title);
 
-//    else if (getRole() == ANSWER_ROLE)
-//        qDebug() << "Opened answer page" << url().toString();
-
-//    else if (getRole() == DOC_ROLE)
-//        qDebug() << "Opened doc page" << getAPI().toSignature();
+    else if (getRole() == ANSWER_ROLE)
+        Connection::getInstance()->logOpenAnswer(getAPI().toSignature(), getQuestion(), url().toString());
 }
 
 void WebView::onLoaded()

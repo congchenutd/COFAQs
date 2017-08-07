@@ -51,8 +51,10 @@ ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
             onCloseResult(params, res);
         else if (action == "rateanswer")
             onRateAnswer(params, res);
-        else if (action == "answerclicking")
-            onAnswerClicking(params, res);
+        else if (action == "openanswer")
+            onOpenAnswer(params, res);
+        else if (action == "closeanswer")
+            onCloseAnswer(params, res);
         else if(action == "queryfaqs")
             onQueryFAQs(params, res);
         else if(action == "profile")
@@ -102,10 +104,34 @@ void ClientHandler::onPing(const Parameters& params, QHttpResponse* res)
     res->end();
 }
 
+void ClientHandler::onLogin(const Parameters& params, QHttpResponse* res)
+{
+    _dao->login(
+            params["username"],
+            params["email"]);
+
+    res->addHeader("Content-Type", "text/html");
+    res->setStatusCode(qhttp::ESTATUS_OK);
+    res->write(tr("Your are logged in").toUtf8());
+    res->end();
+}
+
+void ClientHandler::onLogout(const Parameters& params, QHttpResponse* res)
+{
+    _dao->logout(
+            params["username"],
+            params["email"]);
+
+    res->addHeader("Content-Type", "text/html");
+    res->setStatusCode(qhttp::ESTATUS_OK);
+    res->write(tr("Your are logged out").toUtf8());
+    res->end();
+}
+
 /**
  * Log start document reading
  */
-void ClientHandler::onOpenDocument(const ClientHandler::Parameters &params, QHttpResponse *res)
+void ClientHandler::onOpenDocument(const Parameters &params, QHttpResponse *res)
 {
     _dao->logOpenDocument(
             params["username"],
@@ -121,7 +147,7 @@ void ClientHandler::onOpenDocument(const ClientHandler::Parameters &params, QHtt
 /**
  * Log end document reading
  */
-void ClientHandler::onCloseDocument(const ClientHandler::Parameters &params, QHttpResponse *res)
+void ClientHandler::onCloseDocument(const Parameters &params, QHttpResponse *res)
 {
     _dao->logCloseDocument(
             params["username"],
@@ -211,16 +237,9 @@ void ClientHandler::onRateAnswer(const Parameters& params, QHttpResponse* res)
     res->end();
 }
 
-/**
- * Process log answer clicking request
- * @param params    - parameters of the request
- * @param res       - response
- */
-void ClientHandler::onAnswerClicking(const Parameters& params, QHttpResponse* res)
+void ClientHandler::onOpenAnswer(const Parameters& params, QHttpResponse* res)
 {
-    // link may contain percentage encoded reserved chars, such as & < > #
-    // convert them back to human readable chars
-    _dao->logAnswerClicking(
+    _dao->logOpenAnswer(
             params["username"],
             params["email"],
             params["apisig"],
@@ -229,18 +248,23 @@ void ClientHandler::onAnswerClicking(const Parameters& params, QHttpResponse* re
 
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
-    res->write(tr("Your Answer is logged").toUtf8());
+    res->write(tr("Open answer is logged").toUtf8());
     res->end();
-}
-
-void ClientHandler::onOpenAnswer(const Parameters& params, QHttpResponse* res)
-{
-
 }
 
 void ClientHandler::onCloseAnswer(const Parameters& params, QHttpResponse* res)
 {
+    _dao->logCloseAnswer(
+            params["username"],
+            params["email"],
+            params["apisig"],
+            params["question"],
+            QUrl::fromPercentEncoding(params["link"].toUtf8()));
 
+    res->addHeader("Content-Type", "text/html");
+    res->setStatusCode(qhttp::ESTATUS_OK);
+    res->write(tr("Close answer is logged").toUtf8());
+    res->end();
 }
 
 /**

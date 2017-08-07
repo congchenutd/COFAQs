@@ -20,6 +20,8 @@ public:
 private:
     Parameters parseParameters(const QString& url) const;
     void onPing             (const Parameters& params, QHttpResponse* res);
+    void onLogin            (const Parameters& params, QHttpResponse* res);
+    void onLogout           (const Parameters& params, QHttpResponse* res);
     void onOpenDocument     (const Parameters& params, QHttpResponse* res);
     void onCloseDocument    (const Parameters& params, QHttpResponse* res);
     void onOpenSearch       (const Parameters& params, QHttpResponse* res);
@@ -27,7 +29,6 @@ private:
     void onOpenResult       (const Parameters& params, QHttpResponse* res);
     void onCloseResult      (const Parameters& params, QHttpResponse* res);
     void onRateAnswer       (const Parameters& params, QHttpResponse* res);
-    void onAnswerClicking   (const Parameters& params, QHttpResponse* res);
     void onOpenAnswer       (const Parameters& params, QHttpResponse* res);
     void onCloseAnswer      (const Parameters& params, QHttpResponse* res);
     void onQueryFAQs        (const Parameters& params, QHttpResponse* res);

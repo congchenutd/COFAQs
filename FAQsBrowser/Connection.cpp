@@ -41,6 +41,36 @@ void Connection::ping()
     manager->get(QNetworkRequest(QUrl(url)));
 }
 
+void Connection::login(const QString& userName, const QString& email)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
+
+    QString url = tr("http://%1:%2/?action=login&username=%3&email=%4")
+            .arg(_settings->getServerIP())
+            .arg(_settings->getServerPort())
+            .arg(_settings->getUserName())
+            .arg(_settings->getEmail());
+    qDebug() << userName << "logged in";
+
+    manager->get(QNetworkRequest(QUrl(url)));
+}
+
+void Connection::logout(const QString& userName, const QString& email)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
+
+    QString url = tr("http://%1:%2/?action=logout&username=%3&email=%4")
+            .arg(_settings->getServerIP())
+            .arg(_settings->getServerPort())
+            .arg(_settings->getUserName())
+            .arg(_settings->getEmail());
+    qDebug() << userName << "logged out";
+
+    manager->get(QNetworkRequest(QUrl(url)));
+}
+
 /**
  * Ping reply returned
  * @param reply - reply object
@@ -228,12 +258,44 @@ void Connection::logAnswerClicking(const QString& apiSig, const QString& questio
 
 void Connection::logOpenAnswer(const QString& apiSig, const QString& question, const QString& link)
 {
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
+    QString url = tr("http://%1:%2/?action=openanswer&username=%3&email=%4&apisig=%5&question=%6")
+            .arg(_settings->getServerIP())
+            .arg(_settings->getServerPort())
+            .arg(_settings->getUserName())
+            .arg(_settings->getEmail())
+            .arg(apiSig)
+            .arg(question);
+
+    // link may contain illegal chars for url, percent encode them
+    // Workaround: tr doesn't work correctly for percent encoded strings
+    url += "&link="  + QUrl::toPercentEncoding(link);
+    qDebug() << "Log open answer: " << apiSig << question << url;
+
+    manager->get(QNetworkRequest(QUrl(url)));
 }
 
 void Connection::logCloseAnswer(const QString& apiSig, const QString& question, const QString& link)
 {
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
+    QString url = tr("http://%1:%2/?action=closeanswer&username=%3&email=%4&apisig=%5&question=%6")
+            .arg(_settings->getServerIP())
+            .arg(_settings->getServerPort())
+            .arg(_settings->getUserName())
+            .arg(_settings->getEmail())
+            .arg(apiSig)
+            .arg(question);
+
+    // link may contain illegal chars for url, percent encode them
+    // Workaround: tr doesn't work correctly for percent encoded strings
+    url += "&link="  + QUrl::toPercentEncoding(link);
+    qDebug() << "Log close answer: " << apiSig << question << url;
+
+    manager->get(QNetworkRequest(QUrl(url)));
 }
 
 void Connection::logRating(const QString& apiSig, const QString& question, const QString& link, bool helpful)
