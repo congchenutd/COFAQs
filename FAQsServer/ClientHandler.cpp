@@ -37,6 +37,10 @@ ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
         QString action = params["action"];
         if(action == "ping")
             onPing(params, res);
+        else if (action == "login")
+            onLogin(params, res);
+        else if (action == "logout")
+            onLogout(params, res);
         else if (action == "opendoc")
             onOpenDocument(params, res);
         else if (action == "closedoc")
@@ -60,10 +64,7 @@ ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
         else if(action == "profile")
             onQueryUserProfile(params, res);
         else if(action == "submitphoto")
-        {
-            QByteArray data = req->collectedData();
             onSubmitPhoto(params, req, res);
-        }
     });
 }
 
@@ -334,3 +335,5 @@ void ClientHandler::onStaticResource(const QString& url, QHttpResponse* res)
     }
     res->end();
 }
+
+

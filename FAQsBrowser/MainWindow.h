@@ -45,6 +45,8 @@ private slots:
     void onPersonal();
 //    void onCloseTab(int index);
     void updateHelpfulButtons();
+    void onTimer();
+    void onPong(bool serverAlive);
 
 private:
     WebView* currentWebView() const;

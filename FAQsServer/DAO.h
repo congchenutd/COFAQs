@@ -6,6 +6,7 @@
 
 class QJsonDocument;
 class SimilarityComparer;
+class QSqlQuery;
 
 // 读写数据库的DAO
 class DAO : public QObject
@@ -16,6 +17,8 @@ public:
     static DAO* getInstance();
 
     void setLogger(Logger* logger);
+
+    void createTables();
 
     void login(const QString& userName, const QString& email);
 
@@ -93,6 +96,8 @@ private:
 
     QString getCurrentDateTime() const;
     QString getDateTimeFormat() const;
+
+    void executeQuery(QSqlQuery& query, const QString& content = QString()) const;
 
 private:
     static DAO*         _instance;

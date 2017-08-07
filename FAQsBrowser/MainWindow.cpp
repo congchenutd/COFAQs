@@ -12,6 +12,7 @@
 #include <QDebug>
 #include <QWebHistory>
 #include <QCloseEvent>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
@@ -88,6 +89,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(_tabWidget, SIGNAL(titleLoaded()),                  this, SLOT(updateHelpfulButtons()));
     connect(_tabWidget, SIGNAL(currentChanged(int)),            this, SLOT(updateHelpfulButtons()));
 
+    connect(Connection::getInstance(), SIGNAL(pingReply(bool)), this, SLOT(onPong(bool)));
+
+    QTimer* timer = new QTimer;
+    connect(timer, SIGNAL(timeout()), this, SLOT(onTimer()));
+    timer->start(10* 1000); // ping server every 10 secs
+    onTimer();
+
     ui.actionShowSearch->toggle();
 }
 
@@ -112,6 +120,8 @@ MainWindow* MainWindow::getInstance() {
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
+    Settings* settings = Settings::getInstance();
+    Connection::getInstance()->logout(settings->getUserName(), settings->getEmail());
     _tabWidget->onCloseAllTabs();
     event->accept();
 }
@@ -275,6 +285,31 @@ void MainWindow::updateHelpfulButtons()
         bool showHelpful = (role == WebView::RESULT_ROLE || role == WebView::ANSWER_ROLE) && !webView->title().isEmpty();
         ui.actionHelpful   ->setVisible(showHelpful);
         ui.actionNotHelpful->setVisible(showHelpful);
+    }
+}
+
+void MainWindow::onTimer() {
+    Connection::getInstance()->ping();
+}
+
+void MainWindow::onPong(bool serverAlive)
+{
+    static bool wasAlive = false;
+    if (serverAlive)
+    {
+        if (!wasAlive)
+        {
+            Settings* settings = Settings::getInstance();
+            QString userName = settings->getUserName();
+            Connection::getInstance()->login(userName, settings->getEmail());
+            statusBar()->showMessage(tr("%1 logged in").arg(userName));
+        }
+        wasAlive = true;
+    }
+    else
+    {
+        statusBar()->showMessage(tr("Server is not available!"));
+        wasAlive = false;
     }
 }
 

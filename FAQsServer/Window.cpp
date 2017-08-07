@@ -36,6 +36,7 @@ Window::Window(QWidget* parent) :
     // redirect qdebug log to a text edit
     Logger* logger = new Logger(new TextEditToQIODeviceAdapter(ui.teLog, this));
     DAO::getInstance()->setLogger(logger);
+    DAO::getInstance()->createTables();
 
     // Start the server
     Settings* settings = Settings::getInstance();
