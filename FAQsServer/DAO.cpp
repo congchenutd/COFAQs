@@ -710,13 +710,25 @@ QJsonArray DAO::createAnswersJson(int apiID, int questionID) const
 {
     QJsonArray result;
     QSqlQuery query;
-    executeQuery(query, tr("select AnswerID from ( \
+
+    // If there are too few answers to this question, show all the answers
+    // otherwise, only show those with a sum rating >= 0
+    executeQuery(query,
+                 tr("select count(distinct AnswerID) \
+                  from UserRateAnswer \
+                  where APIID = %1 and QuestionID = %2").arg(apiID).arg(questionID));
+    int count = query.next()? query.value(0).toInt() : 0;
+    int helpfulnessThreshold = count < Settings::getInstance()->getMinAnswers() ? -INT32_MAX : 0;
+
+    executeQuery(query,
+                 tr("select AnswerID from ( \
                   select AnswerID, sum(Helpful) as Helpful \
                   from UserRateAnswer \
                   where APIID = %1 and QuestionID = %2 \
                   group by AnswerID) \
-                  where Helpful >= 0 \
-                  order by Helpful desc").arg(apiID).arg(questionID));
+                  where Helpful >= %3 \
+                  order by Helpful desc").arg(apiID).arg(questionID).arg(helpfulnessThreshold));
+    query.size();
     while(query.next())
     {
         QJsonObject answerJson = createAnswerJson(query.value(0).toInt());

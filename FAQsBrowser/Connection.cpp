@@ -49,8 +49,8 @@ void Connection::login(const QString& userName, const QString& email)
     QString url = tr("http://%1:%2/?action=login&username=%3&email=%4")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
-            .arg(_settings->getUserName())
-            .arg(_settings->getEmail());
+            .arg(userName)
+            .arg(email);
     qDebug() << userName << "logged in";
 
     manager->get(QNetworkRequest(QUrl(url)));
@@ -64,8 +64,8 @@ void Connection::logout(const QString& userName, const QString& email)
     QString url = tr("http://%1:%2/?action=logout&username=%3&email=%4")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
-            .arg(_settings->getUserName())
-            .arg(_settings->getEmail());
+            .arg(userName)
+            .arg(email);
     qDebug() << userName << "logged out";
 
     manager->get(QNetworkRequest(QUrl(url)));

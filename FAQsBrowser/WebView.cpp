@@ -94,8 +94,6 @@ void WebView::onProgress(int progress) {
 
 void WebView::onTitleChanged(const QString& title)
 {
-    qDebug() << "Title changed" << title;
-
     if (title.isEmpty())
         return;
 

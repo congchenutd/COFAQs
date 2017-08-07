@@ -12,6 +12,7 @@ public:
     QString getServerIP()               const;
     quint16 getServerPort()             const;
     double  getSimilarityThreshold()    const;  // 判断两个句子是否是语义一致的阈值
+    int     getMinAnswers()             const;
 
     void setServerIP            (const QString& ip);
     void setServerPort          (uint port);

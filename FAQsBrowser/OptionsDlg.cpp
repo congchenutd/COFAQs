@@ -3,6 +3,7 @@
 #include "Settings.h"
 
 #include <QFontDialog>
+#include <QDebug>
 
 OptionsDlg::OptionsDlg(QWidget* parent) :
     QDialog(parent)
@@ -35,13 +36,29 @@ void OptionsDlg::accept()
 {
     // save settings
     Settings* settings = Settings::getInstance();
-    settings->setServerIP       (ui.leServerIP  ->text());
-    settings->setServerPort     (ui.leServerPort->text().toInt());
-    settings->setUserName       (ui.leUsername  ->text());
-    settings->setEmail          (ui.leEmail     ->text());
-    settings->setFont           (ui.btFont      ->font());
+    QString oldUserName = settings->getUserName();
+    QString oldEmail    = settings->getEmail();
+    QString newUserName = ui.leUsername ->text();
+    QString newEmail    = ui.leEmail    ->text();
+
+    if (newUserName.isEmpty())
+        return;
+
+    settings->setUserName   (newUserName);
+    settings->setEmail      (newEmail);
+    settings->setServerIP   (ui.leServerIP  ->text());
+    settings->setServerPort (ui.leServerPort->text().toInt());
+    settings->setFont       (ui.btFont      ->font());
     settings->setSearchEngine(ui.radioGoogle->isChecked() ? "Google" : "Baidu");
 
+    // login if user name is changed
+    if (newUserName != oldUserName)
+    {
+        Connection::getInstance()->logout(oldUserName, oldEmail);
+        Connection::getInstance()->login (newUserName, newEmail);
+    }
+
+    // submit photo
     QString photoFilePath = settings->getUserName() + ".png";
     if(ui.labelImage->pixmap() != 0)
         ui.labelImage->pixmap()->save(photoFilePath, "png");  // save photo file

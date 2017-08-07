@@ -297,13 +297,11 @@ void MainWindow::onPong(bool serverAlive)
     static bool wasAlive = false;
     if (serverAlive)
     {
+        Settings* settings = Settings::getInstance();
+        QString userName = settings->getUserName();
         if (!wasAlive)
-        {
-            Settings* settings = Settings::getInstance();
-            QString userName = settings->getUserName();
             Connection::getInstance()->login(userName, settings->getEmail());
-            statusBar()->showMessage(tr("%1 logged in").arg(userName));
-        }
+        statusBar()->showMessage(tr("%1 logged in").arg(userName));
         wasAlive = true;
     }
     else
