@@ -35,7 +35,9 @@ ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
         url.remove(0, 2);  // remove "/?"
         Parameters params = parseParameters(url);   // parameters in the request
         QString action = params["action"];
-        if(action == "ping")
+        if (action == "registration")
+            onRegistration(params, res);
+        else if(action == "ping")
             onPing(params, res);
         else if (action == "login")
             onLogin(params, res);
@@ -91,6 +93,33 @@ ClientHandler::Parameters ClientHandler::parseParameters(const QString& url) con
     return result;
 }
 
+void ClientHandler::onRegistration(const Parameters& params, QHttpResponse* res)
+{
+    QString userName = params["username"];
+
+    bool result = _dao->registration(
+            userName,
+            params["password"],
+            params["firstname"],
+            params["lastname"]
+            );
+
+    if (result)
+    {
+        res->addHeader("Content-Type", "text/html");
+        res->setStatusCode(qhttp::ESTATUS_OK);
+        res->write(tr("User account %1 is successfully registered!").arg(userName).toUtf8());
+        res->end();
+    }
+    else
+    {
+        res->addHeader("Content-Type", "text/html");
+        res->setStatusCode(qhttp::ESTATUS_BAD_REQUEST);
+        res->write(tr("The username %1 already exists!").arg(userName).toUtf8());
+        res->end();
+    }
+}
+
 /**
  * Process ping request and respond with a pong
  * @param params    - parameters of the request
@@ -107,21 +136,32 @@ void ClientHandler::onPing(const Parameters& params, QHttpResponse* res)
 
 void ClientHandler::onLogin(const Parameters& params, QHttpResponse* res)
 {
-    _dao->login(
-            params["username"],
-            params["email"]);
+    QString userName = params["username"];
+    bool result =  _dao->login(
+            userName,
+            params["password"]
+            );
 
-    res->addHeader("Content-Type", "text/html");
-    res->setStatusCode(qhttp::ESTATUS_OK);
-    res->write(tr("Your are logged in").toUtf8());
-    res->end();
+    if (result)
+    {
+        res->addHeader("Content-Type", "text/html");
+        res->setStatusCode(qhttp::ESTATUS_OK);
+        res->write(tr("User %1 logged in!").arg(userName).toUtf8());
+        res->end();
+    }
+    else
+    {
+        res->addHeader("Content-Type", "text/html");
+        res->setStatusCode(qhttp::ESTATUS_BAD_REQUEST);
+        res->write(tr("User %1 login failed!").arg(userName).toUtf8());
+        res->end();
+    }
 }
 
 void ClientHandler::onLogout(const Parameters& params, QHttpResponse* res)
 {
     _dao->logout(
-            params["username"],
-            params["email"]);
+            params["username"]);
 
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
@@ -136,7 +176,6 @@ void ClientHandler::onOpenDocument(const Parameters &params, QHttpResponse *res)
 {
     _dao->logOpenDocument(
             params["username"],
-            params["email"],
             params["apisig"]);
 
     res->addHeader("Content-Type", "text/html");
@@ -152,7 +191,6 @@ void ClientHandler::onCloseDocument(const Parameters &params, QHttpResponse *res
 {
     _dao->logCloseDocument(
             params["username"],
-            params["email"],
             params["apisig"]);
 
     res->addHeader("Content-Type", "text/html");
@@ -165,7 +203,6 @@ void ClientHandler::onOpenSearch(const Parameters& params, QHttpResponse* res)
 {
     _dao->logOpenSearch(
             params["username"],
-            params["email"],
             params["apisig"],
             params["question"]);
 
@@ -179,7 +216,6 @@ void ClientHandler::onCloseSearch(const Parameters& params, QHttpResponse* res)
 {
     _dao->logCloseSearch(
             params["username"],
-            params["email"],
             params["apisig"],
             params["question"]);
 
@@ -193,7 +229,6 @@ void ClientHandler::onOpenResult(const Parameters& params, QHttpResponse* res)
 {
     _dao->logOpenResult(
             params["username"],
-            params["email"],
             params["apisig"],
             params["question"],
             QUrl::fromPercentEncoding(params["link"].toUtf8()),
@@ -209,7 +244,6 @@ void ClientHandler::onCloseResult(const Parameters& params, QHttpResponse* res)
 {
     _dao->logCloseResult(
             params["username"],
-            params["email"],
             params["apisig"],
             params["question"],
             QUrl::fromPercentEncoding(params["link"].toUtf8()));
@@ -226,7 +260,6 @@ void ClientHandler::onRateAnswer(const Parameters& params, QHttpResponse* res)
     // convert them back to human readable chars
     _dao->logRating(
             params["username"],
-            params["email"],
             params["apisig"],
             params["question"],
             QUrl::fromPercentEncoding(params["link"] .toUtf8()),
@@ -242,7 +275,6 @@ void ClientHandler::onOpenAnswer(const Parameters& params, QHttpResponse* res)
 {
     _dao->logOpenAnswer(
             params["username"],
-            params["email"],
             params["apisig"],
             params["question"],
             QUrl::fromPercentEncoding(params["link"].toUtf8()));
@@ -257,7 +289,6 @@ void ClientHandler::onCloseAnswer(const Parameters& params, QHttpResponse* res)
 {
     _dao->logCloseAnswer(
             params["username"],
-            params["email"],
             params["apisig"],
             params["question"],
             QUrl::fromPercentEncoding(params["link"].toUtf8()));

@@ -15,9 +15,11 @@ public:
     static Connection* getInstance();   // singleton
     void ping();    // check if the server is alive
 
-    void login(const QString& userName, const QString& email);
+    void registration(const QString& userName, const QString& encryptedPassword, const QString& firstName, const QString& lastName);
 
-    void logout(const QString& userName, const QString& email);
+    void login(const QString& userName, const QString& encryptedPassword);
+
+    void logout(const QString& userName);
 
     // Log API reading
     void logDocumentReading(const QString& apiSig);  // user viewed the api doc
@@ -53,12 +55,16 @@ public:
     void submitPhoto(const QString& filePath);
 
 private slots:
-    void onPingReply (QNetworkReply* reply);
-    void onQueryReply(QNetworkReply* reply);
-    void onUserProfileReply(QNetworkReply* reply);
+    void onRegistrationReply    (QNetworkReply* reply);
+    void onLoginReply           (QNetworkReply* reply);
+    void onPingReply            (QNetworkReply* reply);
+    void onQueryReply           (QNetworkReply* reply);
+    void onUserProfileReply     (QNetworkReply* reply);
 
 signals:
-    void pingReply(bool alive);
+    void registrationReply  (bool successful);
+    void loginReply         (bool successful);
+    void pingReply          (bool alive);
 
     // an array of api objects, each api object contains multiple questions
     void queryReply(const QJsonObject&);

@@ -23,5 +23,6 @@ int main(int argc, char *argv[])
 #endif
     MainWindow wnd;
     wnd.showMaximized();
+
     return app.exec();
 }

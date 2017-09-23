@@ -20,40 +20,43 @@ public:
 
     void createTables();
 
-    void login(const QString& userName, const QString& email);
+    bool registration(const QString& userName, const QString& password,
+                      const QString& firstName, const QString& lastName);
 
-    void logout(const QString& userName, const QString& email);
+    bool login(const QString& userName, const QString& password);
+
+    void logout(const QString& userName);
 
     // log API doc reading history
-    void logDocumentReading(const QString& userName, const QString& email, const QString& apiSig);
+    void logDocumentReading(const QString& userName, const QString& apiSig);
 
-    void logOpenDocument(const QString& userName, const QString& email, const QString& apiSig);
+    void logOpenDocument(const QString& userName, const QString& apiSig);
 
-    void logCloseDocument(const QString& userName, const QString& email, const QString& apiSig);
+    void logCloseDocument(const QString& userName, const QString& apiSig);
 
     // opened a search page
-    void logOpenSearch(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
+    void logOpenSearch(const QString& userName, const QString& apiSig, const QString& question);
 
     // closed a search page
-    void logCloseSearch(const QString& userName, const QString& email, const QString& apiSig, const QString& question);
+    void logCloseSearch(const QString& userName, const QString& apiSig, const QString& question);
 
     // opened a search result
-    void logOpenResult(const QString& userName, const QString& email, const QString& apiSig,
+    void logOpenResult(const QString& userName, const QString& apiSig,
                        const QString& question, const QString& link, const QString& title);
 
     // closed a search result
-    void logCloseResult(const QString& userName, const QString& email, const QString& apiSig,
+    void logCloseResult(const QString& userName, const QString& apiSig,
                         const QString& question, const QString& link);
 
     // user clicked helpful or unhelpful
-    void logRating(const QString& userName, const QString& email, const QString& apiSig,
+    void logRating(const QString& userName, const QString& apiSig,
                     const QString& question, const QString& link,  bool helpful);
 
     // opened an answer link
-    void logOpenAnswer(const QString& userName, const QString& email, const QString& apiSig,
+    void logOpenAnswer(const QString& userName, const QString& apiSig,
                        const QString& question, const QString& link);
 
-    void logCloseAnswer(const QString& userName, const QString& email, const QString& apiSig,
+    void logCloseAnswer(const QString& userName, const QString& apiSig,
                         const QString& question, const QString& link);
 
     // query FAQs for an API (class)
@@ -76,7 +79,7 @@ private:
     int getQuestionID(const QString& question)  const;
     int getAnswerID  (const QString& link)      const;
 
-    int updateUser    (const QString& userName, const QString& email);
+    int updateUser    (const QString& userName);
     int updateAPI     (const QString& signature);
     int updateQuestion(const QString& question, const QString& apiSig);
     int updateAnswer  (const QString& link, const QString& title);

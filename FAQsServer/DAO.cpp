@@ -12,6 +12,7 @@
 #include <QDateTime>
 #include <QSettings>
 #include <QSqlError>
+#include <QCryptographicHash>
 
 DAO* DAO::_instance = 0;
 
@@ -40,9 +41,11 @@ void DAO::createTables()
 
     executeQuery(query,
                  "create table if not exists Users ( \
-                 ID    int primary key, \
-                 Name  varchar unique not null, \
-                 Email varchar unique)");
+                 ID         int primary key, \
+                 UserName   varchar unique not null,    \
+                 Password   varchar,                    \
+                 FirstName  varchar,                    \
+                 LastName   varchar)");
 
     executeQuery(query,
                  "create table if not exists Questions ( \
@@ -146,7 +149,7 @@ int DAO::getID(const QString& tableName, const QString& section, const QString& 
     return query.next() ? query.value(0).toInt() : -1;
 }
 
-int DAO::getUserID    (const QString& userName)  const { return getID("Users",     "Name",      userName); }
+int DAO::getUserID    (const QString& userName)  const { return getID("Users",     "UserName",  userName); }
 int DAO::getAPIID     (const QString& signature) const { return getID("APIs",      "Signature", signature); }
 int DAO::getQuestionID(const QString& question)  const { return getID("Questions", "Question",  question); }
 int DAO::getAnswerID  (const QString& link)      const { return getID("Answers",   "Link",      link); }
@@ -177,27 +180,26 @@ int DAO::updateAPI(const QString& signature)
  * Update Users table
  * @return user ID, new or existing
  */
-int DAO::updateUser(const QString& userName, const QString& email)
+int DAO::updateUser(const QString& userName)
 {
     if(userName.isEmpty())
         return -1;
 
     // update existing user or insert a new one
-    QSqlQuery query;
-    int id = getUserID(userName);
-    if(id > 0) {
-        query.prepare("update Users set Name = :name, Email = :email where ID = :id");
-    }
-    else
-    {
-        id = getNextID("Users");
-        query.prepare("insert into Users values (:id, :name, :email)");
-    }
-    query.bindValue(":id", id);
-    query.bindValue(":name",  userName);
-    query.bindValue(":email", email);
-    executeQuery(query);
-    return id;
+//    QSqlQuery query;
+//    int id = getUserID(userName);
+//    if(id > 0) {
+//        query.prepare("update Users set Name = :name, Email = :email where ID = :id");
+//    }
+//    else
+//    {
+//        id = getNextID("Users");
+//        query.prepare("insert into Users values (:id, :name, :email)");
+//    }
+//    query.bindValue(":id", id);
+//    query.bindValue(":name",  userName);
+//    executeQuery(query);
+//    return id;
 }
 
 /**
@@ -337,21 +339,60 @@ int DAO::updateAnswer(const QString& link, const QString& title)
     return id;
 }
 
-void DAO::login(const QString& userName, const QString& email)
+bool DAO::registration(const QString& userName, const QString& password,
+                       const QString& firstName, const QString& lastName)
 {
-    int userID = updateUser(userName, email);
+    int userID = getUserID(userName);
+    if (userID > -1)    // username already exists
+        return false;
+
     QSqlQuery query;
-    query.prepare("insert into UserLogin values (:UserID, 1, :Time)");
-    query.bindValue(":UserID", userID);
-    query.bindValue(":Time",   getCurrentDateTime());
+    userID = getNextID("Users");
+    query.prepare("insert into Users values (:id, :userName, :password, :firstName, :lastName)");
+    query.bindValue(":id",          userID);
+    query.bindValue(":userName",    userName);
+    query.bindValue(":password",    password);
+    query.bindValue(":firstName",   firstName);
+    query.bindValue(":lastName",    lastName);
     executeQuery(query);
 
-    *_logger << userName << "logged in at" << getCurrentDateTime() << endl;
+    *_logger << userName << firstName << lastName << "registered" << endl;
+    return true;
 }
 
-void DAO::logout(const QString& userName, const QString& email)
+bool DAO::login(const QString& userName, const QString& password)
 {
-    int userID = updateUser(userName, email);
+    int userID = getUserID(userName);
+    if (userID < 0)
+    {
+        *_logger << "Non-existing user " << userName << "login failed at" << getCurrentDateTime() << endl;
+        return false;
+    }
+
+    QSqlQuery query;
+    query.exec(tr("select Password from Users where ID = %1").arg(userID));
+    if (query.next())
+    {
+        QString storedPassword = query.value(0).toString();
+        if (storedPassword != password)
+        {
+            *_logger << userName << "login failed at" << getCurrentDateTime() << "Reason: wrong password" << endl;
+            return false;
+        }
+        query.prepare("insert into UserLogin values (:UserID, 1, :Time)");
+        query.bindValue(":UserID", userID);
+        query.bindValue(":Time",   getCurrentDateTime());
+        executeQuery(query);
+
+        *_logger << userName << "logged in at" << getCurrentDateTime() << endl;
+        return true;
+    }
+    return false;
+}
+
+void DAO::logout(const QString& userName)
+{
+    int userID = updateUser(userName);
     QSqlQuery query;
     query.prepare("insert into UserLogin values (:UserID, 0, :Time)");
     query.bindValue(":UserID", userID);
@@ -367,9 +408,9 @@ void DAO::logout(const QString& userName, const QString& email)
  * @param email     - user email
  * @param apiSig    - signature of the related API
  */
-void DAO::logDocumentReading(const QString& userName, const QString& email, const QString& apiSig)
+void DAO::logDocumentReading(const QString& userName, const QString& apiSig)
 {
-    int userID  = updateUser(userName, email);
+    int userID  = updateUser(userName);
     int apiID   = updateAPI (apiSig);
 
     QSqlQuery query;
@@ -384,9 +425,9 @@ void DAO::logDocumentReading(const QString& userName, const QString& email, cons
     // TODO: log document reading start and end?
 }
 
-void DAO::logOpenDocument(const QString &userName, const QString &email, const QString &apiSig)
+void DAO::logOpenDocument(const QString &userName, const QString &apiSig)
 {
-    int userID  = updateUser(userName, email);
+    int userID  = updateUser(userName);
     int apiID   = updateAPI (apiSig);
 
     QSqlQuery query;
@@ -399,7 +440,7 @@ void DAO::logOpenDocument(const QString &userName, const QString &email, const Q
     *_logger << userName << "started reading document for API:" << apiSig << endl;
 }
 
-void DAO::logCloseDocument(const QString& userName, const QString& email, const QString& apiSig)
+void DAO::logCloseDocument(const QString& userName, const QString& apiSig)
 {
     int userID      = getUserID(userName);
     int apiID       = updateAPI(apiSig);
@@ -424,9 +465,9 @@ void DAO::logCloseDocument(const QString& userName, const QString& email, const 
     }
 }
 
-void DAO::logOpenSearch(const QString& userName, const QString& email, const QString& apiSig, const QString& question)
+void DAO::logOpenSearch(const QString& userName, const QString& apiSig, const QString& question)
 {
-    int userID      = updateUser(userName, email);
+    int userID      = updateUser(userName);
     int apiID       = updateAPI(apiSig);
     int questionID  = updateQuestion(question, apiSig);
 
@@ -441,7 +482,7 @@ void DAO::logOpenSearch(const QString& userName, const QString& email, const QSt
     *_logger << userName << "started search question:" << question << "for API:" << apiSig << endl;
 }
 
-void DAO::logCloseSearch(const QString& userName, const QString& email, const QString& apiSig, const QString& question)
+void DAO::logCloseSearch(const QString& userName, const QString& apiSig, const QString& question)
 {
     int userID      = getUserID(userName);
     int apiID       = updateAPI(apiSig);
@@ -468,10 +509,10 @@ void DAO::logCloseSearch(const QString& userName, const QString& email, const QS
     }
 }
 
-void DAO::logOpenResult(const QString& userName, const QString& email, const QString& apiSig,
+void DAO::logOpenResult(const QString& userName, const QString& apiSig,
                         const QString& question, const QString& link, const QString& title)
 {
-    int userID      = updateUser(userName, email);
+    int userID      = updateUser(userName);
     int apiID       = getAPIID(apiSig);
     int questionID  = getQuestionID(question);
     int answerID    = updateAnswer(link, title);
@@ -489,10 +530,10 @@ void DAO::logOpenResult(const QString& userName, const QString& email, const QSt
              << "about API:" << apiSig << "at:" << getCurrentDateTime() << endl;
 }
 
-void DAO::logCloseResult(const QString& userName, const QString& email, const QString& apiSig,
+void DAO::logCloseResult(const QString& userName, const QString& apiSig,
                          const QString& question, const QString& link)
 {
-    int userID      = updateUser(userName, email);
+    int userID      = updateUser(userName);
     int apiID       = getAPIID(apiSig);
     int questionID  = getQuestionID(question);
     int answerID    = getAnswerID(link);
@@ -514,20 +555,20 @@ void DAO::logCloseResult(const QString& userName, const QString& email, const QS
         query.bindValue(":EndTime",     getCurrentDateTime());  // update end time
         executeQuery(query);
 
-        logCloseSearch(userName, email, apiSig, question);    // update search end in case the search page is closed first
+        logCloseSearch(userName, apiSig, question);    // update search end in case the search page is closed first
     }
 
     *_logger << userName << "closed search result page:" << link << "for question:" << question
              << "about API:" << apiSig << "at:" << getCurrentDateTime() << endl;
 }
 
-void DAO::logRating(const QString& userName, const QString& email, const QString& apiSig, const QString& question,
+void DAO::logRating(const QString& userName, const QString& apiSig, const QString& question,
                     const QString& link, bool helpful)
 {
     // update relationships
     int apiID       = updateAPI     (apiSig);       // because we may have a new apiID
     int answerID    = getAnswerID   (link);
-    int userID      = updateUser    (userName, email);
+    int userID      = updateUser    (userName);
     int questionID  = updateQuestion(question, apiSig);
 
     QSqlQuery query;
@@ -545,9 +586,9 @@ void DAO::logRating(const QString& userName, const QString& email, const QString
              << "for question:" << question << "about API:" << apiSig << "at:" << getCurrentDateTime() << endl;
 }
 
-void DAO::logOpenAnswer(const QString& userName, const QString& email, const QString& apiSig, const QString& question, const QString& link)
+void DAO::logOpenAnswer(const QString& userName, const QString& apiSig, const QString& question, const QString& link)
 {
-    int userID      = updateUser(userName, email);
+    int userID      = updateUser(userName);
     int apiID       = getAPIID(apiSig);
     int questionID  = getQuestionID(question);
     int answerID    = getAnswerID(link);
@@ -565,9 +606,9 @@ void DAO::logOpenAnswer(const QString& userName, const QString& email, const QSt
     *_logger << userName << "opened answer page:" << link << "for question:" << question << "about API:" << apiSig << endl;
 }
 
-void DAO::logCloseAnswer(const QString& userName, const QString& email, const QString& apiSig, const QString& question, const QString& link)
+void DAO::logCloseAnswer(const QString& userName, const QString& apiSig, const QString& question, const QString& link)
 {
-    int userID      = updateUser(userName, email);
+    int userID      = updateUser(userName);
     int apiID       = getAPIID(apiSig);
     int questionID  = getQuestionID(question);
     int answerID    = getAnswerID(link);

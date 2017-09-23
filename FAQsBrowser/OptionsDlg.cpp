@@ -15,7 +15,6 @@ OptionsDlg::OptionsDlg(QWidget* parent) :
     ui.leServerIP       ->setText(settings->getServerIP());
     ui.leServerPort     ->setText(QString::number(settings->getServerPort()));
     ui.leUsername       ->setText(settings->getUserName());
-    ui.leEmail          ->setText(settings->getEmail());
     ui.btFont           ->setFont(settings->getFont());
     ui.radioGoogle->setChecked(settings->getSearchEngine() == "Google");
     ui.radioBaidu ->setChecked(settings->getSearchEngine() == "Baidu");
@@ -37,26 +36,21 @@ void OptionsDlg::accept()
     // save settings
     Settings* settings = Settings::getInstance();
     QString oldUserName = settings->getUserName();
-    QString oldEmail    = settings->getEmail();
     QString newUserName = ui.leUsername ->text();
     QString newEmail    = ui.leEmail    ->text();
 
-    if (newUserName.isEmpty())
-        return;
-
     settings->setUserName   (newUserName);
-    settings->setEmail      (newEmail);
     settings->setServerIP   (ui.leServerIP  ->text());
     settings->setServerPort (ui.leServerPort->text().toInt());
     settings->setFont       (ui.btFont      ->font());
     settings->setSearchEngine(ui.radioGoogle->isChecked() ? "Google" : "Baidu");
 
     // login if user name is changed
-    if (newUserName != oldUserName)
-    {
-        Connection::getInstance()->logout(oldUserName, oldEmail);
-        Connection::getInstance()->login (newUserName, newEmail);
-    }
+//    if (newUserName != oldUserName)
+//    {
+//        Connection::getInstance()->logout(oldUserName);
+//        Connection::getInstance()->login (newUserName);
+//    }
 
     // submit photo
     QString photoFilePath = settings->getUserName() + ".png";

@@ -26,7 +26,9 @@ Main.cpp \
     Settings.cpp \
     Template.cpp \
     ImageLabel.cpp \
-    SearchEngineVisitor.cpp
+    SearchEngineVisitor.cpp \
+    LoginDlg.cpp \
+    RegistrationDlg.cpp
 
 HEADERS  += MainWindow.h \
     TabWidget.h \
@@ -42,11 +44,15 @@ HEADERS  += MainWindow.h \
     Settings.h \
     Template.h \
     ImageLabel.h \
-    SearchEngineVisitor.h
+    SearchEngineVisitor.h \
+    LoginDlg.h \
+    RegistrationDlg.h
 
 FORMS    += MainWindow.ui \
     OptionsDlg.ui \
-    SearchDlg.ui
+    SearchDlg.ui \
+    LoginDlg.ui \
+    RegistrationDlg.ui
 
 RESOURCES += \
     Resource.qrc

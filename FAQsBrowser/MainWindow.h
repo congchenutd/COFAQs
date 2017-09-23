@@ -7,6 +7,8 @@
 class TabWidget;
 class WebView;
 class QProgressBar;
+class QLabel;
+class Settings;
 
 class MainWindow : public QMainWindow
 {
@@ -54,8 +56,10 @@ private:
 
 private:
     Ui::MainWindow ui;
-    TabWidget*    _tabWidget;
-    QProgressBar* _progressBar;
+    TabWidget*      _tabWidget;
+    QProgressBar*   _progressBar;
+    QLabel*         _labelServerStatus;
+    Settings*       _settings;
 
     static MainWindow* _instance;
 };

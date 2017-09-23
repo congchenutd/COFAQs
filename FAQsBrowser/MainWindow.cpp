@@ -6,6 +6,7 @@
 #include "Connection.h"
 #include "Settings.h"
 #include "WebPage.h"
+#include "LoginDlg.h"
 #include <QMessageBox>
 #include <QWebSettings>
 #include <QProgressBar>
@@ -20,6 +21,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui.setupUi(this);
 
     _instance = this;
+    _settings = Settings::getInstance();
+
+    _settings->setLoggedUserName(QString());
+
     _tabWidget = new TabWidget(this);
     QWidget* centralWidget = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout;
@@ -53,7 +58,11 @@ MainWindow::MainWindow(QWidget *parent) :
     _progressBar->setMaximum(100);
     ui.statusBar->addPermanentWidget(_progressBar);
 
-    qApp->setFont(Settings::getInstance()->getFont());
+    _labelServerStatus = new QLabel;
+    ui.statusBar->addPermanentWidget(_labelServerStatus);
+    ui.statusBar->addPermanentWidget(new QLabel("  ")); // extra space to the right
+
+    qApp->setFont(_settings->getFont());
 
     onDocPage();
     toggleReloadStop(false);  // update reload/stop button status
@@ -105,10 +114,9 @@ WebView* MainWindow::newTab(WebView::PageRole role) {
 
 void MainWindow::newPersonalTab(const QString& userName)
 {
-    Settings* settings = Settings::getInstance();
     _tabWidget->newTab(WebView::PROFILE_ROLE)->load(
-        QUrl(tr("http://%1:%2/?action=profile&username=%3").arg(settings->getServerIP())
-                                                           .arg(settings->getServerPort())
+        QUrl(tr("http://%1:%2/?action=profile&username=%3").arg(_settings->getServerIP())
+                                                           .arg(_settings->getServerPort())
                                                            .arg(userName)));
 }
 
@@ -120,8 +128,7 @@ MainWindow* MainWindow::getInstance() {
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    Settings* settings = Settings::getInstance();
-    Connection::getInstance()->logout(settings->getUserName(), settings->getEmail());
+    Connection::getInstance()->logout(_settings->getUserName());
     _tabWidget->onCloseAllTabs();
     event->accept();
 }
@@ -294,25 +301,29 @@ void MainWindow::onTimer() {
 
 void MainWindow::onPong(bool serverAlive)
 {
-    static bool wasAlive = false;
-    if (serverAlive)
+    if (!serverAlive)
     {
-        Settings* settings = Settings::getInstance();
-        QString userName = settings->getUserName();
-        if (!wasAlive)
-            Connection::getInstance()->login(userName, settings->getEmail());
-        statusBar()->showMessage(tr("%1 logged in").arg(userName));
-        wasAlive = true;
+        _labelServerStatus->setText(tr("Server is not available."));
+        return;
     }
-    else
+
+    if (!_settings->getLoggedUserName().isEmpty())
     {
-        statusBar()->showMessage(tr("Server is not available!"));
-        wasAlive = false;
+        _labelServerStatus->setText(tr("%1 is logged in to the server.").arg(_settings->getLoggedUserName()));
+        return;
+    }
+
+    _labelServerStatus->setText(tr("Server is available."));
+    LoginDlg dlg;
+    if (dlg.exec() == QDialog::Accepted)
+    {
+        _settings->setLoggedUserName(dlg.getUserName());
+        _labelServerStatus->setText(tr("%1 is logged in to the server.").arg(dlg.getUserName()));
     }
 }
 
 void MainWindow::onPersonal() {
-    newPersonalTab(Settings::getInstance()->getUserName());
+    newPersonalTab(_settings->getLoggedUserName());
 }
 
 WebView* MainWindow::currentWebView() const {

@@ -41,31 +41,62 @@ void Connection::ping()
     manager->get(QNetworkRequest(QUrl(url)));
 }
 
-void Connection::login(const QString& userName, const QString& email)
+void Connection::registration(const QString& userName,  const QString& encryptedPassword,
+                                 const QString& firstName, const QString& lastName)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished   (QNetworkReply*)),
+            this,    SLOT  (onRegistrationReply(QNetworkReply*)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=login&username=%3&email=%4")
+    // Send request
+    QString url = tr("http://%1:%2/?action=registration&username=%3&password=%4&firstname=%5&lastname=%6")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(userName)
-            .arg(email);
-    qDebug() << userName << "logged in";
+            .arg(encryptedPassword)
+            .arg(firstName)
+            .arg(lastName);
+    manager->get(QNetworkRequest(QUrl(url)));
+}
+
+void Connection::onRegistrationReply(QNetworkReply* reply)
+{
+    int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    emit registrationReply(status == 200);  // status code 200 means OK
+}
+
+void Connection::login(const QString& userName, const QString& encryptedPassword)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished   (QNetworkReply*)),
+            this,    SLOT  (onLoginReply(QNetworkReply*)));
+    connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
+
+    QString url = tr("http://%1:%2/?action=login&username=%3&password=%4")
+            .arg(_settings->getServerIP())
+            .arg(_settings->getServerPort())
+            .arg(userName)
+            .arg(encryptedPassword);
 
     manager->get(QNetworkRequest(QUrl(url)));
 }
 
-void Connection::logout(const QString& userName, const QString& email)
+void Connection::onLoginReply(QNetworkReply* reply)
+{
+    int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    emit loginReply(status == 200);  // status code 200 means OK
+}
+
+void Connection::logout(const QString& userName)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=logout&username=%3&email=%4")
+    QString url = tr("http://%1:%2/?action=logout&username=%3")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
-            .arg(userName)
-            .arg(email);
+            .arg(userName);
     qDebug() << userName << "logged out";
 
     manager->get(QNetworkRequest(QUrl(url)));
@@ -111,11 +142,10 @@ void Connection::logDocumentReading(const QString& apiSig)
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=docreading&username=%3&email=%4&apisig=%5")
+    QString url = tr("http://%1:%2/?action=docreading&username=%3&apisig=%4")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig);
     qDebug() << "Log API document reading: " << url;
 
@@ -127,11 +157,10 @@ void Connection::logOpenDocument(const QString& apiSig)
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=opendoc&username=%3&email=%4&apisig=%5")
+    QString url = tr("http://%1:%2/?action=opendoc&username=%3&apisig=%4")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig);
     qDebug() << "Log open API document:" << url;
 
@@ -143,11 +172,10 @@ void Connection::logCloseDocument(const QString& apiSig)
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=closedoc&username=%3&email=%4&apisig=%5")
+    QString url = tr("http://%1:%2/?action=closedoc&username=%3&apisig=%4")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig);
     qDebug() << "Log close API document:" << url;
 
@@ -159,11 +187,10 @@ void Connection::logOpenSearch(const QString& apiSig, const QString& question)
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=opensearch&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=opensearch&username=%3&apisig=%4&question=%5")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig)
             .arg(question);
     manager->get(QNetworkRequest(QUrl(url)));
@@ -176,11 +203,10 @@ void Connection::logCloseSearch(const QString& apiSig, const QString& question)
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=closesearch&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=closesearch&username=%3&apisig=%4&question=%5")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig)
             .arg(question);
     manager->get(QNetworkRequest(QUrl(url)));
@@ -193,11 +219,10 @@ void Connection::logOpenResult(const QString& apiSig, const QString& question, c
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=openresult&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=openresult&username=%3&apisig=%4&question=%5")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig)
             .arg(question);
 
@@ -215,11 +240,10 @@ void Connection::logCloseResult(const QString& apiSig, const QString& question, 
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=closeresult&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=closeresult&username=%3&apisig=%4&question=%5")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig)
             .arg(question);
 
@@ -240,11 +264,10 @@ void Connection::logAnswerClicking(const QString& apiSig, const QString& questio
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=answerclicking&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=answerclicking&username=%3&apisig=%4&question=%5")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig)
             .arg(question);
 
@@ -261,11 +284,10 @@ void Connection::logOpenAnswer(const QString& apiSig, const QString& question, c
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=openanswer&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=openanswer&username=%3&apisig=%4&question=%5")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig)
             .arg(question);
 
@@ -282,11 +304,10 @@ void Connection::logCloseAnswer(const QString& apiSig, const QString& question, 
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=closeanswer&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=closeanswer&username=%3&apisig=%4&question=%5")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig)
             .arg(question);
 
@@ -309,11 +330,10 @@ void Connection::logRating(const QString& apiSig, const QString& question, const
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
-    QString url = tr("http://%1:%2/?action=rateanswer&username=%3&email=%4&apisig=%5&question=%6")
+    QString url = tr("http://%1:%2/?action=rateanswer&username=%3&apisig=%4&question=%5")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(_settings->getUserName())
-            .arg(_settings->getEmail())
             .arg(apiSig)
             .arg(question);
 
