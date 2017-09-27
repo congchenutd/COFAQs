@@ -31,6 +31,10 @@ QString RegistrationDlg::getUserName() const {
     return ui.leUserName->text();
 }
 
+QString RegistrationDlg::getPlainTextPassword() const {
+    return ui.lePassword->text();
+}
+
 QString RegistrationDlg::getEncryptedPassword() const {
     return QCryptographicHash::hash(ui.lePassword->text().toUtf8(), QCryptographicHash::Md5);
 }
@@ -61,7 +65,7 @@ void RegistrationDlg::onSubmit()
         return;
     }
 
-    if (getEncryptedPassword() != ui.lePassword2->text())
+    if (getPlainTextPassword() != ui.lePassword2->text())
     {
         showMessage(tr("Passwords do not match!"));
         return;
@@ -73,13 +77,9 @@ void RegistrationDlg::onSubmit()
 void RegistrationDlg::onRegistrationResult(bool result)
 {
     if (result)
-    {
         accept();
-    }
     else
-    {
         showMessage(tr("Registration failed! The user name %1 already exists.").arg(getUserName()));
-    }
 }
 
 void RegistrationDlg::showMessage(const QString& message)

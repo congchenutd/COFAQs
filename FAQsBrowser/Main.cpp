@@ -1,4 +1,5 @@
 ﻿#include "MainWindow.h"
+#include "LoginDlg.h"
 #include <QApplication>
 #include <QDir>
 
@@ -18,11 +19,16 @@ QString getCurrentPath()
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
 #ifdef Q_OS_OSX
     QDir::setCurrent(getCurrentPath());
 #endif
-    MainWindow wnd;
-    wnd.showMaximized();
+//    MainWindow wnd;
+//    wnd.showMaximized();
+
+    app.setQuitOnLastWindowClosed(false);
+    LoginDlg dlg;
+    dlg.show();
 
     return app.exec();
 }

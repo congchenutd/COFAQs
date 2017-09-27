@@ -6,7 +6,6 @@
 #include "Connection.h"
 #include "Settings.h"
 #include "WebPage.h"
-#include "LoginDlg.h"
 #include <QMessageBox>
 #include <QWebSettings>
 #include <QProgressBar>
@@ -23,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     _instance = this;
     _settings = Settings::getInstance();
 
-    _settings->setLoggedUserName(QString());
+    setUserName(QString());    // clear logged user
 
     _tabWidget = new TabWidget(this);
     QWidget* centralWidget = new QWidget(this);
@@ -67,18 +66,19 @@ MainWindow::MainWindow(QWidget *parent) :
     onDocPage();
     toggleReloadStop(false);  // update reload/stop button status
 
-    connect(ui.actionAbout,      SIGNAL(triggered()), this, SLOT(onAbout()));
-    connect(ui.actionOptions,    SIGNAL(triggered()), this, SLOT(onOptions()));
-    connect(ui.actionDocPage,    SIGNAL(triggered()), this, SLOT(onDocPage()));
-    connect(ui.actionZoomIn,     SIGNAL(triggered()), this, SLOT(onZoomIn()));
-    connect(ui.actionZoomOut,    SIGNAL(triggered()), this, SLOT(onZoomOut()));
-    connect(ui.actionResetZoom,  SIGNAL(triggered()), this, SLOT(onZoomReset()));
-    connect(ui.actionBack,       SIGNAL(triggered()), this, SLOT(onBack()));
-    connect(ui.actionForward,    SIGNAL(triggered()), this, SLOT(onForward()));
-    connect(ui.actionReloadStop, SIGNAL(triggered()), this, SLOT(onReloadStop()));
-    connect(ui.actionHelpful,    SIGNAL(triggered()), this, SLOT(onHelpful()));
-    connect(ui.actionNotHelpful, SIGNAL(triggered()), this, SLOT(onNotHelpful()));
-    connect(ui.actionPersonal,   SIGNAL(triggered()), this, SLOT(onPersonal()));
+    connect(ui.actionAbout,         SIGNAL(triggered()), this, SLOT(onAbout()));
+    connect(ui.actionOptions,       SIGNAL(triggered()), this, SLOT(onOptions()));
+    connect(ui.actionDocPage,       SIGNAL(triggered()), this, SLOT(onDocPage()));
+    connect(ui.actionZoomIn,        SIGNAL(triggered()), this, SLOT(onZoomIn()));
+    connect(ui.actionZoomOut,       SIGNAL(triggered()), this, SLOT(onZoomOut()));
+    connect(ui.actionResetZoom,     SIGNAL(triggered()), this, SLOT(onZoomReset()));
+    connect(ui.actionBack,          SIGNAL(triggered()), this, SLOT(onBack()));
+    connect(ui.actionForward,       SIGNAL(triggered()), this, SLOT(onForward()));
+    connect(ui.actionReloadStop,    SIGNAL(triggered()), this, SLOT(onReloadStop()));
+    connect(ui.actionHelpful,       SIGNAL(triggered()), this, SLOT(onHelpful()));
+    connect(ui.actionNotHelpful,    SIGNAL(triggered()), this, SLOT(onNotHelpful()));
+    connect(ui.actionPersonal,      SIGNAL(triggered()), this, SLOT(onPersonal()));
+    connect(ui.actionQuit,          SIGNAL(triggered()), this, SLOT(onQuit()));
 
     connect(ui.actionShowSearch,   SIGNAL(toggled(bool)), this, SLOT(onShowSearch  (bool)));
     connect(ui.actionZoomTextOnly, SIGNAL(toggled(bool)), this, SLOT(onZoomTextOnly(bool)));
@@ -117,7 +117,12 @@ void MainWindow::newPersonalTab(const QString& userName)
     _tabWidget->newTab(WebView::PROFILE_ROLE)->load(
         QUrl(tr("http://%1:%2/?action=profile&username=%3").arg(_settings->getServerIP())
                                                            .arg(_settings->getServerPort())
-                                                           .arg(userName)));
+             .arg(userName)));
+}
+
+void MainWindow::setUserName(const QString& userName)
+{
+    _settings->setUserName(userName);
 }
 
 MainWindow* MainWindow::_instance = 0;
@@ -128,9 +133,9 @@ MainWindow* MainWindow::getInstance() {
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    Connection::getInstance()->logout(_settings->getUserName());
-    _tabWidget->onCloseAllTabs();
+    _tabWidget->onCloseAllTabs();   // save closing events
     event->accept();
+    onQuit();
 }
 
 void MainWindow::onAbout() {
@@ -301,29 +306,30 @@ void MainWindow::onTimer() {
 
 void MainWindow::onPong(bool serverAlive)
 {
+    // Server is disconnected
     if (!serverAlive)
     {
         _labelServerStatus->setText(tr("Server is not available."));
         return;
     }
 
-    if (!_settings->getLoggedUserName().isEmpty())
+    // Already logged in
+    if (!_settings->getUserName().isEmpty())
     {
-        _labelServerStatus->setText(tr("%1 is logged in to the server.").arg(_settings->getLoggedUserName()));
+        _labelServerStatus->setText(tr("%1 is logged onto the server.").arg(_settings->getUserName()));
         return;
-    }
-
-    _labelServerStatus->setText(tr("Server is available."));
-    LoginDlg dlg;
-    if (dlg.exec() == QDialog::Accepted)
-    {
-        _settings->setLoggedUserName(dlg.getUserName());
-        _labelServerStatus->setText(tr("%1 is logged in to the server.").arg(dlg.getUserName()));
     }
 }
 
+void MainWindow::onQuit()
+{
+    Connection::getInstance()->logout(_settings->getUserName());
+    setUserName(QString());
+    qApp->quit();
+}
+
 void MainWindow::onPersonal() {
-    newPersonalTab(_settings->getLoggedUserName());
+    newPersonalTab(_settings->getUserName());
 }
 
 WebView* MainWindow::currentWebView() const {

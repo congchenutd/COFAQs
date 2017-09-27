@@ -11,5 +11,8 @@
         <file>Images/Yes.png</file>
         <file>Images/Personal.png</file>
         <file>Images/FAQ.png</file>
+        <file>Images/Logout.png</file>
+        <file>Images/Quit.png</file>
+        <file>Images/Options.png</file>
     </qresource>
 </RCC>

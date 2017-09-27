@@ -17,7 +17,7 @@ public:
     QFont   getFont()               const;
     QString getSearchEngineUrl()    const;
     QString getSearchEngine()       const;
-    QString getLoggedUserName()     const;
+//    QString getLoggedUserName()     const;
 
     void setDocUrl          (const QString& url);
     void setLibraryName     (const QString& libName);
@@ -27,7 +27,7 @@ public:
     void setZoomFactor      (qreal factor);
     void setFont            (const QFont& font);
     void setSearchEngine    (const QString& searchEngineName);
-    void setLoggedUserName  (const QString& userName);
+//    void setLoggedUserName  (const QString& userName);
 
 private:
     Settings();

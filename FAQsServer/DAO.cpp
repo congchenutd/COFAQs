@@ -360,6 +360,7 @@ bool DAO::registration(const QString& userName, const QString& password,
     return true;
 }
 
+// TODO: return error message
 bool DAO::login(const QString& userName, const QString& password)
 {
     int userID = getUserID(userName);

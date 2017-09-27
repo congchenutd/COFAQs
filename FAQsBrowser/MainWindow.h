@@ -18,6 +18,7 @@ public:
     MainWindow(QWidget* parent = 0);
     WebView* newTab(WebView::PageRole role = WebView::NULL_ROLE);
     void newPersonalTab(const QString& userName);
+    void setUserName(const QString& userName);
 
     static MainWindow* getInstance();
 
@@ -49,6 +50,7 @@ private slots:
     void updateHelpfulButtons();
     void onTimer();
     void onPong(bool serverAlive);
+    void onQuit();
 
 private:
     WebView* currentWebView() const;

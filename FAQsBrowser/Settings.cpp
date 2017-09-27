@@ -16,7 +16,6 @@ QString Settings::getServerIP()         const { return value("ServerIP")    .toS
 int     Settings::getServerPort()       const { return value("ServerPort")  .toInt();    }
 QString Settings::getUserName()         const { return value("UserName")    .toString(); }
 qreal   Settings::getZoomFactor()       const { return value("ZoomFactor")  .toReal();   }
-QString Settings::getLoggedUserName()   const { return _loggedUserName; }
 
 // Google: http://www.google.com/search?q=
 // Baidu: http://www.baidu.com/s?wd=
@@ -39,7 +38,6 @@ QFont Settings::getFont() const
     return result;
 }
 
-
 void Settings::setDocUrl            (const QString& url)        { setValue("DocUrl",            url);      }
 void Settings::setLibraryName       (const QString& libName)    { setValue("LibraryName",       libName);  }
 void Settings::setServerIP          (const QString& ip)         { setValue("ServerIP",          ip);       }
@@ -47,7 +45,6 @@ void Settings::setServerPort        (int port)                  { setValue("Serv
 void Settings::setUserName          (const QString& userName)   { setValue("UserName",          userName); }
 void Settings::setZoomFactor        (qreal factor)              { setValue("ZoomFactor",        factor);   }
 void Settings::setSearchEngine      (const QString& searchEngineName) { setValue("SearchEngine", searchEngineName); }
-void Settings::setLoggedUserName    (const QString& userName)   { _loggedUserName = userName; }
 
 void Settings::setFont(const QFont& font)
 {

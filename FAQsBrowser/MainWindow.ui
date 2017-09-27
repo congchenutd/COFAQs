@@ -29,7 +29,7 @@
      <x>0</x>
      <y>0</y>
      <width>470</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -111,6 +111,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionQuit"/>
+   <addaction name="actionOptions"/>
+   <addaction name="separator"/>
    <addaction name="actionDocPage"/>
    <addaction name="separator"/>
    <addaction name="actionBack"/>
@@ -163,6 +166,10 @@
    </property>
   </action>
   <action name="actionOptions">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/Images/Options.png</normaloff>:/Images/Options.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Options</string>
    </property>
@@ -266,6 +273,15 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/Images/Quit.png</normaloff>:/Images/Quit.png</iconset>
+   </property>
+   <property name="text">
+    <string>Quit</string>
    </property>
   </action>
  </widget>
