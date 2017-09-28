@@ -8,6 +8,7 @@
 #include <QCloseEvent>
 #include <QDebug>
 #include <QTimer>
+#include <QDesktopServices>
 
 LoginDlg::LoginDlg(QWidget *parent) :
     QDialog(parent)
@@ -57,9 +58,8 @@ void LoginDlg::onLoginReply(bool successful)
     }
 }
 
-void LoginDlg::onHelp()
-{
-
+void LoginDlg::onHelp() {
+    QDesktopServices::openUrl(QUrl("mailto:?to=congchenutd@gmail.com&subject=Need help with COFAQs"));
 }
 
 void LoginDlg::onOptions()

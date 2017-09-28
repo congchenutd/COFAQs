@@ -9,6 +9,8 @@ RegistrationDlg::RegistrationDlg(QWidget *parent) :
 {
     ui.setupUi(this);
 
+    ui.leEmail->setValidator(new QRegExpValidator(QRegExp("[\\w-]+@([\\w-]+\\.)+[\\w-]+")));
+
     // message label
     ui.labelMessage->hide();
     QPalette palette = ui.labelMessage->palette();
@@ -66,6 +68,12 @@ void RegistrationDlg::onSubmit()
     if (getLastName().isEmpty())
     {
         showMessage(tr("Last name cannot be empty!"));
+        return;
+    }
+
+    if (!ui.leEmail->hasAcceptableInput())
+    {
+        showMessage(tr("Please input a valid email address!"));
         return;
     }
 
