@@ -21,7 +21,7 @@ public:
     void createTables();
 
     bool registration(const QString& userName, const QString& password,
-                      const QString& firstName, const QString& lastName);
+                      const QString& firstName, const QString& lastName, const QString& email);
 
     bool login(const QString& userName, const QString& password);
 
@@ -79,7 +79,6 @@ private:
     int getQuestionID(const QString& question)  const;
     int getAnswerID  (const QString& link)      const;
 
-    int updateUser    (const QString& userName);
     int updateAPI     (const QString& signature);
     int updateQuestion(const QString& question, const QString& apiSig);
     int updateAnswer  (const QString& link, const QString& title);

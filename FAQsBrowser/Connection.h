@@ -15,7 +15,8 @@ public:
     static Connection* getInstance();   // singleton
     void ping();    // check if the server is alive
 
-    void registration(const QString& userName, const QString& encryptedPassword, const QString& firstName, const QString& lastName);
+    void registration(const QString& userName, const QString& encryptedPassword,
+                      const QString& firstName, const QString& lastName, const QString &email);
 
     void login(const QString& userName, const QString& encryptedPassword);
 
@@ -54,17 +55,20 @@ public:
     // Submit this user's photo
     void submitPhoto(const QString& filePath);
 
+    bool isServerAlive() const;
+
 private slots:
     void onRegistrationReply    (QNetworkReply* reply);
     void onLoginReply           (QNetworkReply* reply);
     void onPingReply            (QNetworkReply* reply);
     void onQueryReply           (QNetworkReply* reply);
     void onUserProfileReply     (QNetworkReply* reply);
+    void onTimer();
 
 signals:
     void registrationReply  (bool successful);
     void loginReply         (bool successful);
-    void pingReply          (bool alive);
+    void serverAlive        (bool alive);
 
     // an array of api objects, each api object contains multiple questions
     void queryReply(const QJsonObject&);
@@ -75,8 +79,9 @@ private:
     Connection();
 
 private:
-    static Connection* _instance;
-    Settings*          _settings;
+    static Connection*  _instance;
+    Settings*           _settings;
+    bool                _serverAlive;
 };
 
 #endif // CONNECTION_H

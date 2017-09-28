@@ -9,6 +9,7 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QFile>
+#include <QTimer>
 
 Connection* Connection::_instance = 0;
 
@@ -21,7 +22,12 @@ Connection* Connection::getInstance()
 
 Connection::Connection()
     : _settings(Settings::getInstance())
-{}
+{
+    QTimer* timer = new QTimer;
+    timer->start(5000);
+    connect(timer, SIGNAL(timeout()), this, SLOT(onTimer()));
+    onTimer();
+}
 
 /**
  * Check if the server is alive by sending a ping message and wait for a pong response
@@ -42,7 +48,7 @@ void Connection::ping()
 }
 
 void Connection::registration(const QString& userName,  const QString& encryptedPassword,
-                                 const QString& firstName, const QString& lastName)
+                              const QString& firstName, const QString& lastName, const QString& email)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished   (QNetworkReply*)),
@@ -50,13 +56,14 @@ void Connection::registration(const QString& userName,  const QString& encrypted
     connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
 
     // Send request
-    QString url = tr("http://%1:%2/?action=registration&username=%3&password=%4&firstname=%5&lastname=%6")
+    QString url = tr("http://%1:%2/?action=registration&username=%3&password=%4&firstname=%5&lastname=%6&email=%7")
             .arg(_settings->getServerIP())
             .arg(_settings->getServerPort())
             .arg(userName)
             .arg(encryptedPassword)
             .arg(firstName)
-            .arg(lastName);
+            .arg(lastName)
+            .arg(email);
     manager->get(QNetworkRequest(QUrl(url)));
 }
 
@@ -109,7 +116,8 @@ void Connection::logout(const QString& userName)
 void Connection::onPingReply(QNetworkReply* reply)
 {
     int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    emit pingReply(status == 200);  // status code 200 means OK
+    _serverAlive= (status == 200);    // status code 200 means OK
+    emit serverAlive(_serverAlive);
 }
 
 /**
@@ -397,6 +405,10 @@ void Connection::onUserProfileReply(QNetworkReply* reply)
     }
 }
 
+void Connection::onTimer() {
+    ping();
+}
+
 /**
  * Send user photo to the server
  * @param filePath  - path of the file on the client machine
@@ -417,4 +429,8 @@ void Connection::submitPhoto(const QString& filePath)
             .arg(_settings->getUserName());
 
     manager->post(QNetworkRequest(QUrl(url)), file);
+}
+
+bool Connection::isServerAlive() const {
+    return _serverAlive;
 }

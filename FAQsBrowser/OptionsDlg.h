@@ -15,7 +15,7 @@ public:
 
 private slots:
     void onPingServer();
-    void onPingReply(bool alive);
+    void onServerAlive(bool alive);
     void onFont();
 
 private:

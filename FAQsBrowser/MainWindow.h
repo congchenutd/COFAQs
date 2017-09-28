@@ -27,7 +27,6 @@ protected:
 
 private slots:
     void onAbout();
-    void onOptions();
     void onDocPage();
     void onZoomIn();
     void onZoomOut();
@@ -49,7 +48,7 @@ private slots:
 //    void onCloseTab(int index);
     void updateHelpfulButtons();
     void onTimer();
-    void onPong(bool serverAlive);
+    void onServerAlive(bool serverAlive);
     void onQuit();
 
 private:

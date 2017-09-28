@@ -4,6 +4,7 @@
 
 #include <QFontDialog>
 #include <QDebug>
+#include <QTimer>
 
 OptionsDlg::OptionsDlg(QWidget* parent) :
     QDialog(parent)
@@ -14,50 +15,25 @@ OptionsDlg::OptionsDlg(QWidget* parent) :
     Settings* settings = Settings::getInstance();
     ui.leServerIP       ->setText(settings->getServerIP());
     ui.leServerPort     ->setText(QString::number(settings->getServerPort()));
-    ui.leUsername       ->setText(settings->getUserName());
     ui.btFont           ->setFont(settings->getFont());
     ui.radioGoogle->setChecked(settings->getSearchEngine() == "Google");
     ui.radioBaidu ->setChecked(settings->getSearchEngine() == "Baidu");
 
-    QPixmap pixmap = QPixmap(settings->getUserName() + ".png").scaled(128, 128);
-    if(!pixmap.isNull())
-        ui.labelImage->setPixmap(pixmap);
+    Connection* connection = Connection::getInstance();
+    connect(connection, SIGNAL(serverAlive(bool)),  this, SLOT(onServerAlive(bool)));
+    connect(ui.btFont,  SIGNAL(clicked()),          this, SLOT(onFont()));
 
-    connect(Connection::getInstance(), SIGNAL(pingReply(bool)), this, SLOT(onPingReply(bool)));
-    connect(ui.leServerIP,   SIGNAL(textEdited(QString)), this, SLOT(onPingServer()));
-    connect(ui.leServerPort, SIGNAL(textEdited(QString)), this, SLOT(onPingServer()));
-    connect(ui.btFont,       SIGNAL(clicked()),           this, SLOT(onFont()));
-
-    onPingServer();  // update server status
+    onServerAlive(connection->isServerAlive());
 }
 
 void OptionsDlg::accept()
 {
     // save settings
     Settings* settings = Settings::getInstance();
-    QString oldUserName = settings->getUserName();
-    QString newUserName = ui.leUsername ->text();
-    QString newEmail    = ui.leEmail    ->text();
-
-    settings->setUserName   (newUserName);
     settings->setServerIP   (ui.leServerIP  ->text());
     settings->setServerPort (ui.leServerPort->text().toInt());
     settings->setFont       (ui.btFont      ->font());
     settings->setSearchEngine(ui.radioGoogle->isChecked() ? "Google" : "Baidu");
-
-    // login if user name is changed
-//    if (newUserName != oldUserName)
-//    {
-//        Connection::getInstance()->logout(oldUserName);
-//        Connection::getInstance()->login (newUserName);
-//    }
-
-    // submit photo
-    QString photoFilePath = settings->getUserName() + ".png";
-    if(ui.labelImage->pixmap() != 0)
-        ui.labelImage->pixmap()->save(photoFilePath, "png");  // save photo file
-
-    Connection::getInstance()->submitPhoto(photoFilePath);    // submit to server
 
     QDialog::accept();
 }
@@ -66,9 +42,9 @@ void OptionsDlg::onPingServer() {
     Connection::getInstance()->ping();
 }
 
-void OptionsDlg::onPingReply(bool alive) {
-    ui.labelServerStatus->setText(alive ? tr("Server alive :)")
-                                        : tr("Server dead :("));
+void OptionsDlg::onServerAlive(bool alive) {
+    ui.labelServerStatus->setText(alive ? tr("Server is available :)")
+                                        : tr("Server is not available :("));
 }
 
 void OptionsDlg::onFont()

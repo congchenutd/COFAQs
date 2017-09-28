@@ -12,14 +12,19 @@ public:
     QString getUserName() const;
     QString getEncrytedPassword() const;
 
+protected:
+    void closeEvent(QCloseEvent*);
+
 private slots:
     void onLogin();
     void onRegister();
     void onLoginReply(bool successful);
-    void onQuit();
+    void onHelp();
+    void onOptions();
+    void onServerAlive(bool alive);
 
 private:
-    void showMessage(const QString& message);
+    void showMessage(const QString& message, bool error = false);
 
 private:
     Ui::LoginDlg ui;

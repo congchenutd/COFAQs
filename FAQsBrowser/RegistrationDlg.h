@@ -13,6 +13,7 @@ public:
     QString getFirstName()  const;
     QString getLastName()   const;
     QString getUserName()   const;
+    QString getEmail()      const;
     QString getPlainTextPassword()   const;
     QString getEncryptedPassword()   const;
 

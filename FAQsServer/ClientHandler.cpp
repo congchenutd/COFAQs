@@ -101,7 +101,8 @@ void ClientHandler::onRegistration(const Parameters& params, QHttpResponse* res)
             userName,
             params["password"],
             params["firstname"],
-            params["lastname"]
+            params["lastname"],
+            params["email"]
             );
 
     if (result)
@@ -311,6 +312,8 @@ void ClientHandler::onQueryFAQs(const Parameters& params, QHttpResponse* res)
         return;
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
+
+    qDebug() << jaFAQs;
     QJsonDocument jdSnippet = SnippetCreator().createFAQs(jaFAQs);  // create html, encapsulated in a json doc
     res->write(jdSnippet.toJson());
     res->end();

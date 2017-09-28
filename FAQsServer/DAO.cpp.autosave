@@ -870,7 +870,7 @@ QJsonDocument DAO::queryUserProfile(const QString& userName) const
     profileJson.insert("apis", apisJson);   // add apis
 
     // get all other users associated with the questions
-    executeQuery(query, tr("select Name, Email from UserAskQuestion, Users \
+    executeQuery(query, tr("select Name, Email from UserSearchQuestion, Users \
                      where QuestionID in (%1) and UserID = ID and UserID != %2 \
                    union \
                    select Name, Email from UserReadAnswer, Users \

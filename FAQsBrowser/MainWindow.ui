@@ -36,7 +36,6 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="actionOptions"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -112,7 +111,6 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionQuit"/>
-   <addaction name="actionOptions"/>
    <addaction name="separator"/>
    <addaction name="actionDocPage"/>
    <addaction name="separator"/>
@@ -163,15 +161,6 @@
    </property>
    <property name="toolTip">
     <string>Document page</string>
-   </property>
-  </action>
-  <action name="actionOptions">
-   <property name="icon">
-    <iconset resource="Resource.qrc">
-     <normaloff>:/Images/Options.png</normaloff>:/Images/Options.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Options</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -296,22 +285,5 @@
  <resources>
   <include location="Resource.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>actionExit</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>199</x>
-     <y>149</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

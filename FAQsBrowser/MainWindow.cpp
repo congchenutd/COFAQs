@@ -67,7 +67,6 @@ MainWindow::MainWindow(QWidget *parent) :
     toggleReloadStop(false);  // update reload/stop button status
 
     connect(ui.actionAbout,         SIGNAL(triggered()), this, SLOT(onAbout()));
-    connect(ui.actionOptions,       SIGNAL(triggered()), this, SLOT(onOptions()));
     connect(ui.actionDocPage,       SIGNAL(triggered()), this, SLOT(onDocPage()));
     connect(ui.actionZoomIn,        SIGNAL(triggered()), this, SLOT(onZoomIn()));
     connect(ui.actionZoomOut,       SIGNAL(triggered()), this, SLOT(onZoomOut()));
@@ -98,12 +97,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(_tabWidget, SIGNAL(titleLoaded()),                  this, SLOT(updateHelpfulButtons()));
     connect(_tabWidget, SIGNAL(currentChanged(int)),            this, SLOT(updateHelpfulButtons()));
 
-    connect(Connection::getInstance(), SIGNAL(pingReply(bool)), this, SLOT(onPong(bool)));
-
-    QTimer* timer = new QTimer;
-    connect(timer, SIGNAL(timeout()), this, SLOT(onTimer()));
-    timer->start(10* 1000); // ping server every 10 secs
-    onTimer();
+    Connection* connection = Connection::getInstance();
+    connect(connection, SIGNAL(serverAlive(bool)), this, SLOT(onServerAlive(bool)));
+    onServerAlive(connection->isServerAlive());
 
     ui.actionShowSearch->toggle();
 }
@@ -142,12 +138,6 @@ void MainWindow::onAbout() {
     QMessageBox::about(this, tr("About"),
                        tr("<h3><b>FAQ Browser v1.2</b></h3>"
                           "<p><a href=mailto:CongChenUTD@Gmail.com>CongChenUTD@Gmail.com</a></p>"));
-}
-
-void MainWindow::onOptions()
-{
-    OptionsDlg dlg(this);
-    dlg.exec();
 }
 
 void MainWindow::onDocPage() {
@@ -304,21 +294,18 @@ void MainWindow::onTimer() {
     Connection::getInstance()->ping();
 }
 
-void MainWindow::onPong(bool serverAlive)
+void MainWindow::onServerAlive(bool serverAlive)
 {
     // Server is disconnected
     if (!serverAlive)
     {
-        _labelServerStatus->setText(tr("Server is not available."));
+        _labelServerStatus->setText(tr("  Server is disconnected."));
         return;
     }
 
     // Already logged in
     if (!_settings->getUserName().isEmpty())
-    {
-        _labelServerStatus->setText(tr("%1 is logged onto the server.").arg(_settings->getUserName()));
-        return;
-    }
+        _labelServerStatus->setText(tr("  %1 is logged onto the server.").arg(_settings->getUserName()));
 }
 
 void MainWindow::onQuit()

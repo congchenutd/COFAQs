@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>573</width>
-    <height>268</height>
+    <width>397</width>
+    <height>266</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Options</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3">
-   <item row="0" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>Server</string>
@@ -57,70 +57,14 @@
       <item>
        <widget class="QLabel" name="labelServerStatus">
         <property name="text">
-         <string>Connection status</string>
+         <string>Retrieving server status ...</string>
         </property>
        </widget>
       </item>
      </layout>
     </widget>
    </item>
-   <item row="0" column="1" rowspan="2">
-    <widget class="QGroupBox" name="groupBox">
-     <property name="title">
-      <string>User</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="leUsername"/>
-      </item>
-      <item row="2" column="1">
-       <widget class="ImageLabel" name="labelImage">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Click to choose</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="leEmail">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Email</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>User name</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Photo</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="1" column="0">
+   <item>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
       <string>Browser</string>
@@ -157,7 +101,7 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="1">
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -169,18 +113,9 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>ImageLabel</class>
-   <extends>QLabel</extends>
-   <header>ImageLabel.h</header>
-  </customwidget>
- </customwidgets>
  <tabstops>
   <tabstop>leServerIP</tabstop>
   <tabstop>leServerPort</tabstop>
-  <tabstop>leUsername</tabstop>
-  <tabstop>leEmail</tabstop>
   <tabstop>btFont</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>

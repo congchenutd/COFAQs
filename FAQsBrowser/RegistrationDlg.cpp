@@ -31,6 +31,10 @@ QString RegistrationDlg::getUserName() const {
     return ui.leUserName->text();
 }
 
+QString RegistrationDlg::getEmail() const {
+    return ui.leEmail->text();
+}
+
 QString RegistrationDlg::getPlainTextPassword() const {
     return ui.lePassword->text();
 }
@@ -41,6 +45,12 @@ QString RegistrationDlg::getEncryptedPassword() const {
 
 void RegistrationDlg::onSubmit()
 {
+    if (!Connection::getInstance()->isServerAlive())
+    {
+        showMessage(tr("Server is not available!"));
+        return;
+    }
+
     if (getUserName().isEmpty())
     {
         showMessage(tr("User name cannot be empty!"));
@@ -59,7 +69,7 @@ void RegistrationDlg::onSubmit()
         return;
     }
 
-    if (getEncryptedPassword().isEmpty())
+    if (getPlainTextPassword().isEmpty())
     {
         showMessage(tr("Password cannot be empty!"));
         return;
@@ -71,7 +81,8 @@ void RegistrationDlg::onSubmit()
         return;
     }
 
-    Connection::getInstance()->registration(getUserName(), getEncryptedPassword(), getFirstName(), getLastName());
+    Connection::getInstance()->registration(getUserName(), getEncryptedPassword(),
+                                            getFirstName(), getLastName(), getEmail());
 }
 
 void RegistrationDlg::onRegistrationResult(bool result)
@@ -79,13 +90,11 @@ void RegistrationDlg::onRegistrationResult(bool result)
     if (result)
         accept();
     else
-        showMessage(tr("Registration failed! The user name %1 already exists.").arg(getUserName()));
+        showMessage(tr("Registration failed! The username might already exist."));
 }
 
 void RegistrationDlg::showMessage(const QString& message)
 {
     ui.labelMessage->setText(message);
     ui.labelMessage->show();
-
-    QTimer::singleShot(2000, ui.labelMessage, SLOT(hide()));
 }
