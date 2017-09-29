@@ -730,7 +730,7 @@ QJsonArray DAO::createAnswersJson(int apiID, int questionID) const
                   from UserRateAnswer \
                   where APIID = %1 and QuestionID = %2").arg(apiID).arg(questionID));
     int count = query.next()? query.value(0).toInt() : 0;
-    int helpfulnessThreshold = count < Settings::getInstance()->getMinAnswers() ? -INT32_MAX : 0;
+    int helpfulnessThreshold = count < Settings::getInstance()->getMinAnswerCount() ? -INT32_MAX : 0;
 
     executeQuery(query,
                  tr("select AnswerID from ( \

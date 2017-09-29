@@ -136,7 +136,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 void MainWindow::onAbout() {
     QMessageBox::about(this, tr("About"),
-                       tr("<h3><b>FAQ Browser v1.2</b></h3>"
+                       tr("<h3><b>FAQ Browser v0.2.1</b></h3>"
                           "<p><a href=mailto:CongChenUTD@Gmail.com>CongChenUTD@Gmail.com</a></p>"));
 }
 

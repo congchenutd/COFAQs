@@ -59,7 +59,7 @@ void LoginDlg::onLoginReply(bool successful)
 }
 
 void LoginDlg::onHelp() {
-    QDesktopServices::openUrl(QUrl("mailto:?to=congchenutd@gmail.com&subject=Need help with COFAQs"));
+    QDesktopServices::openUrl(QUrl("mailto:congchenutd@gmail.com?subject=Need help with COFAQs"));
 }
 
 void LoginDlg::onOptions()
