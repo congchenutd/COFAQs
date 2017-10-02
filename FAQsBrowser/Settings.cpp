@@ -63,7 +63,7 @@ void Settings::loadDefaults()
 {
     setLibraryName("Java SE 7");
     setDocUrl("http://docs.oracle.com/javase/7/docs/api/");
-    setSearchEngine("Baidu");
+    setSearchEngine("Google");
     setZoomFactor(1.2);
 }
 

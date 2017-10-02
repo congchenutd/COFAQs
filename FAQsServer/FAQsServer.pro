@@ -30,7 +30,8 @@ SOURCES = \
     Settings.cpp \
     ClientHandler.cpp \
     Window.cpp \
-    TextEditToQIODeviceAdapter.cpp
+    TextEditToQIODeviceAdapter.cpp \
+    Logger.cpp
 HEADERS = \
     DAO.h \
     SimilarityComparer.h \

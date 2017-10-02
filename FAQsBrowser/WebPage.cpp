@@ -88,14 +88,17 @@ bool WebPage::acceptNavigationRequest(QWebFrame* frame, const QNetworkRequest& r
             }
         }
 
-        // links on the search page open in new tab
+        // links on the search page open in new tab, except for prev/next
         else if(thisView->getRole() == WebView::SEARCH_ROLE)
         {
-            WebView* newView = MainWindow::getInstance()->newTab(WebView::RESULT_ROLE);
-            newView->setAPI     (thisView->getAPI());    // transfer the attributes
-            newView->setQuestion(thisView->getQuestion());
-            newView->load(request);
-            return false;
+            if (!url.startsWith(Settings::getInstance()->getSearchEngineUrl()))
+            {
+                WebView* newView = MainWindow::getInstance()->newTab(WebView::RESULT_ROLE);
+                newView->setAPI     (thisView->getAPI());    // transfer the attributes
+                newView->setQuestion(thisView->getQuestion());
+                newView->load(request);
+                return false;
+            }
         }
     }
 

@@ -361,6 +361,9 @@ void Connection::logRating(const QString& apiSig, const QString& question, const
 void Connection::onQueryReply(QNetworkReply* reply)
 {
     QByteArray data = reply->readAll(); // the reply is a json array representing Q&A pairs of an API
+
+    qDebug() << data;
+
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(data, &err);
     if(err.error == QJsonParseError::NoError)

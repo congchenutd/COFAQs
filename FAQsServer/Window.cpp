@@ -34,8 +34,7 @@ Window::Window(QWidget* parent) :
     connect(_tray,      &QSystemTrayIcon::activated,    this, &Window::onTrayActivated);
 
     // redirect qdebug log to a text edit
-    Logger* logger = new Logger(new TextEditToQIODeviceAdapter(ui.teLog, this));
-    DAO::getInstance()->setLogger(logger);
+    Logger::setDevice(new TextEditToQIODeviceAdapter(ui.teLog, "./Log.txt", this));
     DAO::getInstance()->createTables();
 
     // Start the server
@@ -45,6 +44,7 @@ Window::Window(QWidget* parent) :
         new ClientHandler(req, res);
     });
 
+    Logger* logger = Logger::getInstance();
     if (server->isListening())
         *logger << "FAQsServer is running on port " << settings->getServerPort() << endl;
     else
@@ -60,7 +60,7 @@ void Window::closeEvent(QCloseEvent* event)
 void Window::onAbout()
 {
     QMessageBox::about(this, tr("About"),
-                       tr("<h3><b>FAQ Server v0.2.1</b></h3>"
+                       tr("<h3><b>FAQs Server v0.2.1</b></h3>"
                           "<p><a href=mailto:CongChenUTD@Gmail.com>CongChenUTD@Gmail.com</a></p>"));
 }
 

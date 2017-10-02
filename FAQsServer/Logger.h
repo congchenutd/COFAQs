@@ -4,6 +4,19 @@
 #include <QDebug>
 #include <QTextStream>
 
-typedef QDebug Logger;
+/**
+ * WARNING: call setDevice first
+ */
+class Logger: public QDebug
+{
+public:
+    static void setDevice(QIODevice* device);
+    static Logger* getInstance();
+
+private:
+    Logger(QIODevice* device);
+
+    static QIODevice* _device;
+};
 
 #endif // LOGGER_H

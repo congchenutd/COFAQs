@@ -3,6 +3,7 @@
 
 #include <QIODevice>
 #include <QTextEdit>
+#include <QTextStream>
 
 /**
  * Adapter that converts a QTextEdit to QIODevice
@@ -13,14 +14,15 @@ class TextEditToQIODeviceAdapter : public QIODevice
     Q_OBJECT
 
 public:
-    TextEditToQIODeviceAdapter(QTextEdit* textEdit, QObject* parent);
+    TextEditToQIODeviceAdapter(QTextEdit* textEdit, const QString& filePath, QObject* parent);
 
 protected:
-    qint64 readData(char *data, qint64 maxSize);
-    qint64 writeData(const char *data, qint64 maxSize);
+    qint64 readData(char* data, qint64 maxSize);
+    qint64 writeData(const char* data, qint64 maxSize);
 
 private:
-    QTextEdit* _textEdit;
+    QTextEdit*  _textEdit;
+    QTextStream _os;        // save the log to a file
 };
 
 #endif // TEXTEDITIODEVICE_H

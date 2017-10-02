@@ -1,4 +1,4 @@
-#include "LoginDlg.h"
+﻿#include "LoginDlg.h"
 #include "RegistrationDlg.h"
 #include "Connection.h"
 #include "MainWindow.h"
@@ -15,6 +15,11 @@ LoginDlg::LoginDlg(QWidget *parent) :
 {
     ui.setupUi(this);
     ui.labelMessage->hide();
+
+    ui.leUserName->setEnabled(false);
+    ui.lePassword->setEnabled(false);
+    ui.btLogin   ->setEnabled(false);
+    ui.btRegister->setEnabled(false);
 
     connect(ui.btLogin,     SIGNAL(clicked(bool)),  this, SLOT(onLogin()));
     connect(ui.btRegister,  SIGNAL(clicked(bool)),  this, SLOT(onRegister()));
@@ -65,14 +70,19 @@ void LoginDlg::onHelp() {
 void LoginDlg::onOptions()
 {
     OptionsDlg dlg(this);
-    dlg.exec();
+    if (dlg.exec() == QDialog::Accepted)
+        Connection::getInstance()->ping();
 }
 
 void LoginDlg::onServerAlive(bool alive)
 {
     if (!alive)
         showMessage(tr("Server is unavailable!"), true);
+    else
+        showMessage(QString());
 
+    ui.leUserName->setEnabled(alive);
+    ui.lePassword->setEnabled(alive);
     ui.btLogin   ->setEnabled(alive);
     ui.btRegister->setEnabled(alive);
 }

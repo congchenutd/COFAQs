@@ -1,4 +1,4 @@
-#include "ClientHandler.h"
+﻿#include "ClientHandler.h"
 #include "DAO.h"
 #include "SnippetCreator.h"
 #include "Settings.h"
@@ -313,7 +313,6 @@ void ClientHandler::onQueryFAQs(const Parameters& params, QHttpResponse* res)
     res->addHeader("Content-Type", "text/html");
     res->setStatusCode(qhttp::ESTATUS_OK);
 
-    qDebug() << jaFAQs;
     QJsonDocument jdSnippet = SnippetCreator().createFAQs(jaFAQs);  // create html, encapsulated in a json doc
     res->write(jdSnippet.toJson());
     res->end();

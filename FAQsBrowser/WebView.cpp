@@ -135,6 +135,7 @@ void WebView::onQueryReply(const QJsonObject& joDocPage)
 
     // for each API, add a FAQ section to its document
     QJsonArray jaAPIs = joDocPage.value("apis").toArray();
+
     for(QJsonArray::ConstIterator it = jaAPIs.begin(); it != jaAPIs.end(); ++it)
     {
         QJsonObject joAPI = (*it).toObject();
