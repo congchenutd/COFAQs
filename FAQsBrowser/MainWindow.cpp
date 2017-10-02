@@ -22,8 +22,6 @@ MainWindow::MainWindow(QWidget *parent) :
     _instance = this;
     _settings = Settings::getInstance();
 
-    setUserName(QString());    // clear logged user
-
     _tabWidget = new TabWidget(this);
     QWidget* centralWidget = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout;
@@ -116,11 +114,6 @@ void MainWindow::newPersonalTab(const QString& userName)
              .arg(userName)));
 }
 
-void MainWindow::setUserName(const QString& userName)
-{
-    _settings->setUserName(userName);
-}
-
 MainWindow* MainWindow::_instance = 0;
 
 MainWindow* MainWindow::getInstance() {
@@ -136,7 +129,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 void MainWindow::onAbout() {
     QMessageBox::about(this, tr("About"),
-                       tr("<h3><b>FAQs Browser v0.2.1</b></h3>"
+                       tr("<h3><b>FAQs Browser v0.2.2</b></h3>"
                           "<p><a href=mailto:CongChenUTD@Gmail.com>CongChenUTD@Gmail.com</a></p>"));
 }
 
@@ -304,14 +297,12 @@ void MainWindow::onServerAlive(bool serverAlive)
     }
 
     // Already logged in
-    if (!_settings->getUserName().isEmpty())
-        _labelServerStatus->setText(tr("  %1 is logged onto the server.").arg(_settings->getUserName()));
+    _labelServerStatus->setText(tr("  %1 is logged onto the server.").arg(_settings->getUserName()));
 }
 
 void MainWindow::onQuit()
 {
     Connection::getInstance()->logout(_settings->getUserName());
-    setUserName(QString());
     qApp->quit();
 }
 

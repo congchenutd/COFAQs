@@ -3,6 +3,7 @@
 #include "Connection.h"
 #include "MainWindow.h"
 #include "OptionsDlg.h"
+#include "Settings.h"
 
 #include <QCryptographicHash>
 #include <QCloseEvent>
@@ -20,6 +21,8 @@ LoginDlg::LoginDlg(QWidget *parent) :
     ui.lePassword->setEnabled(false);
     ui.btLogin   ->setEnabled(false);
     ui.btRegister->setEnabled(false);
+
+    ui.leUserName->setText(Settings::getInstance()->getUserName());
 
     connect(ui.btLogin,     SIGNAL(clicked(bool)),  this, SLOT(onLogin()));
     connect(ui.btRegister,  SIGNAL(clicked(bool)),  this, SLOT(onRegister()));
@@ -56,7 +59,7 @@ void LoginDlg::onLoginReply(bool successful)
         accept();
         MainWindow* mainWindow = new MainWindow;
         mainWindow->showMaximized();
-        mainWindow->setUserName(getUserName());
+        Settings::getInstance()->setUserName(getUserName());
     }
     else {
         showMessage(tr("Login failed!"), true);
