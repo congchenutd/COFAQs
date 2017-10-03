@@ -82,7 +82,7 @@ void LoginDlg::onServerAlive(bool alive)
     if (!alive)
         showMessage(tr("Server is unavailable!"), true);
     else
-        showMessage(QString());
+        showMessage(tr("Server is available!"));
 
     ui.leUserName->setEnabled(alive);
     ui.lePassword->setEnabled(alive);

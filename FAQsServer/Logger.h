@@ -6,6 +6,7 @@
 
 /**
  * WARNING: call setDevice first
+ * WARNING: always end a output with endl
  */
 class Logger: public QDebug
 {

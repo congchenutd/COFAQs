@@ -67,7 +67,10 @@ void Window::onAbout()
 void Window::onQuit()
 {
     if (QMessageBox::warning(this, tr("Warning"), tr("Are you sure to quit?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
+    {
+        *Logger::getInstance() << "Server is closed" << endl;
         qApp->quit();
+    }
     else if (!isVisible())   // WORKAROUND: otherwise the app will quit if window is hidden and the user clicks "No"
     {
         show();

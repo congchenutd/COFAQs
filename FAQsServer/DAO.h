@@ -16,8 +16,6 @@ class DAO : public QObject
 public:
     static DAO* getInstance();
 
-    void setLogger(Logger* logger);
-
     void createTables();
 
     bool registration(const QString& userName, const QString& password,

@@ -23,8 +23,6 @@ DAO* DAO::getInstance()
     return _instance;
 }
 
-//void DAO::setLogger(Logger* logger) { _logger = logger; }
-
 void DAO::createTables()
 {
     QSqlQuery query;
@@ -333,7 +331,7 @@ bool DAO::registration(const QString& userName, const QString& password,
     query.bindValue(":email",       email);
     executeQuery(query);
 
-    *_logger << userName << firstName << lastName << "registered" << endl;
+    *_logger << userName << firstName << lastName << email << "is registered." << endl;
     return true;
 }
 
@@ -343,7 +341,7 @@ bool DAO::login(const QString& userName, const QString& password)
     int userID = getUserID(userName);
     if (userID < 0)
     {
-        *_logger << userName << "login failed. Reason: user account doesn't exist" << endl;
+        *_logger << userName << "login failed. Reason: user account doesn't exist." << endl;
         return false;
     }
 
@@ -354,7 +352,7 @@ bool DAO::login(const QString& userName, const QString& password)
         QString storedPassword = query.value(0).toString();
         if (storedPassword != password)
         {
-            *_logger << userName << "login failed. Reason: wrong password" << endl;
+            *_logger << userName << "login failed. Reason: wrong password." << endl;
             return false;
         }
         query.prepare("insert into UserLogin values (:UserID, 1, :Time)");
@@ -362,7 +360,7 @@ bool DAO::login(const QString& userName, const QString& password)
         query.bindValue(":Time",   getCurrentDateTime());
         executeQuery(query);
 
-        *_logger << userName << "logged in" << endl;
+        *_logger << userName << "logged in." << endl;
         return true;
     }
     return false;
@@ -377,7 +375,7 @@ void DAO::logout(const QString& userName)
     query.bindValue(":Time",   getCurrentDateTime());
     executeQuery(query);
 
-    *_logger << userName << "logged out" << endl;
+    *_logger << userName << "logged out." << endl;
 }
 
 /**

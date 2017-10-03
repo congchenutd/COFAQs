@@ -31,7 +31,9 @@ qint64 TextEditToQIODeviceAdapter::writeData(const char* data, qint64 maxSize)
     QString message = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss: ") + data;
 
     if (_textEdit != 0)
+    {
         _textEdit->append(message);     // print to text edit
+    }
 
     _os << message << endl;             // save to file
 
