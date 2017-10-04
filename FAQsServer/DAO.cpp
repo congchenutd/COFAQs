@@ -149,10 +149,15 @@ int DAO::getID(const QString& tableName, const QString& section, const QString& 
     return query.next() ? query.value(0).toInt() : -1;
 }
 
-int DAO::getUserID    (const QString& userName)  const { return getID("Users",     "UserName",  userName); }
+int DAO::getUserID    (const QString& userName)  const { return getID("Users",     "UserName",  userName);  }
 int DAO::getAPIID     (const QString& signature) const { return getID("APIs",      "Signature", signature); }
-int DAO::getQuestionID(const QString& question)  const { return getID("Questions", "Question",  question); }
-int DAO::getAnswerID  (const QString& link)      const { return getID("Answers",   "Link",      link); }
+int DAO::getQuestionID(const QString& question)  const { return getID("Questions", "Question",  question);  }
+
+int DAO::getAnswerID  (const QString& link) const
+{
+    QString fragmentRemoved = QUrl(link).toString(QUrl::RemoveFragment);    // remove fragment such as #v=onepage&q=question
+    return getID("Answers", "Link", fragmentRemoved);
+}
 
 /**
  * Write an API into db
@@ -185,28 +190,22 @@ int DAO::updateQuestion(const QString& question, const QString& apiSig)
     if(question.isEmpty())
         return -1;
 
-    // update the ask count of the existing question
-    QSqlQuery query;
+    // Question already exists
     int questionID = getQuestionID(question);
     if(questionID >= 0)
-    {
-        // TODO: askcount can be found in UserSearchQuestion table
-//        query.exec(tr("update Questions set AskCount = AskCount + 1 where ID = %1")
-//                   .arg(questionID));
-//        updateLead(questionID);
         return questionID;
-    }
 
-    // or insert a new question
+    // insert a new question
+    QSqlQuery query;
     questionID = getNextID("Questions");
     query.prepare("insert into Questions values (:id, :question, 1, -1)");
     query.bindValue(":id",       questionID);
     query.bindValue(":question", question);
     executeQuery(query);
 
-    int apiID = getAPIID(apiSig);
-    if (apiID > -1)
-        measureSimilarity(question, apiID);  // initiate measure
+//    int apiID = getAPIID(apiSig);
+//    if (apiID > -1)
+//        measureSimilarity(question, apiID);  // initiate measure
 
     return questionID;
 }
@@ -369,6 +368,9 @@ bool DAO::login(const QString& userName, const QString& password)
 void DAO::logout(const QString& userName)
 {
     int userID = getUserID(userName);
+    if (userID < 0)
+        return;
+
     QSqlQuery query;
     query.prepare("insert into UserLogin values (:UserID, 0, :Time)");
     query.bindValue(":UserID", userID);
@@ -378,31 +380,11 @@ void DAO::logout(const QString& userName)
     *_logger << userName << "logged out." << endl;
 }
 
-/**
- * Save document reading event
- * @param userName  - user names
- * @param email     - user email
- * @param apiSig    - signature of the related API
- */
-void DAO::logDocumentReading(const QString& userName, const QString& apiSig)
-{
-    int apiID = updateAPI (apiSig);
-
-    QSqlQuery query;
-    query.prepare("insert into UserReadDocument values (:userID, :apiID, :time)");
-    query.bindValue(":userID", getUserID(userName));
-    query.bindValue(":apiID",  apiID);
-    query.bindValue(":time",   getCurrentDateTime());
-    executeQuery(query);
-
-    *_logger << userName << "read document:" << apiSig << endl;
-
-    // TODO: log document reading start and end?
-}
-
 void DAO::logOpenDocument(const QString &userName, const QString &apiSig)
 {
     int apiID = updateAPI (apiSig);
+    if (apiID < 0)
+        return;
 
     QSqlQuery query;
     query.prepare("insert into UserReadDocument values (:UserID, :ApiID, :Start, \'\')");
@@ -416,8 +398,10 @@ void DAO::logOpenDocument(const QString &userName, const QString &apiSig)
 
 void DAO::logCloseDocument(const QString& userName, const QString& apiSig)
 {
-    int userID      = getUserID(userName);
-    int apiID       = updateAPI(apiSig);
+    int userID  = getUserID(userName);
+    int apiID   = updateAPI(apiSig);
+    if (userID < 0 || apiID < 0)
+        return;
 
     // find existing end time
     QSqlQuery query;
@@ -443,6 +427,8 @@ void DAO::logOpenSearch(const QString& userName, const QString& apiSig, const QS
 {
     int apiID       = updateAPI(apiSig);
     int questionID  = updateQuestion(question, apiSig);
+    if (apiID < 0 || questionID < 0)
+        return;
 
     QSqlQuery query;
     query.prepare("insert into UserSearchQuestion values (:userID, :api, :questionID, :start, \'\')");
@@ -460,6 +446,8 @@ void DAO::logCloseSearch(const QString& userName, const QString& apiSig, const Q
     int userID      = getUserID(userName);
     int apiID       = updateAPI(apiSig);
     int questionID  = getQuestionID(question);
+    if (userID < 0 || apiID < 0 || questionID < 0)
+        return;
 
     // find existing end time
     QSqlQuery query;
@@ -485,13 +473,16 @@ void DAO::logCloseSearch(const QString& userName, const QString& apiSig, const Q
 void DAO::logOpenResult(const QString& userName, const QString& apiSig,
                         const QString& question, const QString& link, const QString& title)
 {
+    int userID      = getUserID(userName);
     int apiID       = getAPIID(apiSig);
     int questionID  = getQuestionID(question);
     int answerID    = updateAnswer(link, title);
+    if (userID < 0 || apiID < 0 || questionID < 0 || answerID < 0)
+        return;
 
     QSqlQuery query;
     query.prepare("insert into UserReadSearchResult values (:UserID, :API, :QuestionID, :AnswerID, :Start, \'\')");
-    query.bindValue(":UserID",      getUserID(userName));
+    query.bindValue(":UserID",      userID);
     query.bindValue(":API",         apiID);
     query.bindValue(":QuestionID",  questionID);
     query.bindValue(":AnswerID",    answerID);
@@ -509,6 +500,8 @@ void DAO::logCloseResult(const QString& userName, const QString& apiSig,
     int apiID       = getAPIID(apiSig);
     int questionID  = getQuestionID(question);
     int answerID    = getAnswerID(link);
+    if (userID < 0 || apiID < 0 || questionID < 0 || answerID < 0)
+        return;
 
     // find start time of this result viewing
     QSqlQuery query;
@@ -538,14 +531,18 @@ void DAO::logRating(const QString& userName, const QString& apiSig, const QStrin
                     const QString& link, bool helpful)
 {
     // update relationships
+    int userID      = getUserID(userName);
     int apiID       = updateAPI     (apiSig);       // because we may have a new apiID
     int answerID    = getAnswerID   (link);
     int questionID  = updateQuestion(question, apiSig);
 
+    if (userID < 0 || apiID < 0 || questionID < 0 || answerID < 0)
+        return;
+
     QSqlQuery query;
     query.prepare("insert into UserRateAnswer values (:UserID, :APIID, :QuestionID, :AnswerID, :Helpfulness, :Time)");
 
-    query.bindValue(":UserID",      getUserID(userName));
+    query.bindValue(":UserID",      userID);
     query.bindValue(":APIID",       apiID);
     query.bindValue(":QuestionID",  questionID);
     query.bindValue(":AnswerID",    answerID);
@@ -559,14 +556,17 @@ void DAO::logRating(const QString& userName, const QString& apiSig, const QStrin
 
 void DAO::logOpenAnswer(const QString& userName, const QString& apiSig, const QString& question, const QString& link)
 {
+    int userID      = getUserID(userName);
     int apiID       = getAPIID(apiSig);
     int questionID  = getQuestionID(question);
     int answerID    = getAnswerID(link);
+    if (userID < 0 || apiID < 0 || questionID < 0 || answerID < 0)
+        return;
 
     // add a UserReadAnswer record
     QSqlQuery query;
     query.prepare("insert into UserReadAnswer values (:UserID, :ApiID, :QuestionID, :AnswerID, :StartTime, \'\')");
-    query.bindValue(":UserID",      getUserID(userName));
+    query.bindValue(":UserID",      userID);
     query.bindValue(":ApiID",       apiID);
     query.bindValue(":QuestionID",  questionID);
     query.bindValue(":AnswerID",    answerID);
@@ -582,6 +582,8 @@ void DAO::logCloseAnswer(const QString& userName, const QString& apiSig, const Q
     int apiID       = getAPIID(apiSig);
     int questionID  = getQuestionID(question);
     int answerID    = getAnswerID(link);
+    if (userID < 0 || apiID < 0 || questionID < 0 || answerID < 0)
+        return;
 
     // find start time of this result viewing
     QSqlQuery query;
@@ -621,7 +623,7 @@ void DAO::executeQuery(QSqlQuery& query, const QString& content) const
         query.exec(content);
 
     if (query.lastError().isValid())
-        *_logger << query.lastError() << endl;
+        *_logger << "Database error:" << query.lastError() << endl;
 }
 
 // An example of returned JSON array:

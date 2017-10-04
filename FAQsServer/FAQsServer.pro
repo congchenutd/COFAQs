@@ -30,7 +30,6 @@ SOURCES = \
     Settings.cpp \
     ClientHandler.cpp \
     Window.cpp \
-    TextEditToQIODeviceAdapter.cpp \
     Logger.cpp
 HEADERS = \
     DAO.h \
@@ -40,8 +39,7 @@ HEADERS = \
     Settings.h \
     ClientHandler.h \
     Window.h \
-    Logger.h \
-    TextEditToQIODeviceAdapter.h
+    Logger.h
 
 FORMS += \
     Window.ui

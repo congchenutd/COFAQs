@@ -25,9 +25,6 @@ public:
 
     void logout(const QString& userName);
 
-    // log API doc reading history
-    void logDocumentReading(const QString& userName, const QString& apiSig);
-
     void logOpenDocument(const QString& userName, const QString& apiSig);
 
     void logCloseDocument(const QString& userName, const QString& apiSig);

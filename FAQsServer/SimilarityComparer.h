@@ -24,5 +24,10 @@ signals:
     void comparisonResult(const QString& leadQuestion, const QString& question, qreal value);
 };
 
+class Dandelion : public SimilarityComparer
+{
+    // https://api.dandelion.eu/datatxt/sim/v1/?text1=<sentence1>&text2=<sentence2>&token=ed80aa79e8204214b94a0d50b7ed9dbb
+    // 1k requests a day
+};
 
 #endif // SIMILARITYCOMPARER_H

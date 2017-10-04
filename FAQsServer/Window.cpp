@@ -1,16 +1,15 @@
-﻿#include "TextEditToQIODeviceAdapter.h"
+﻿#include "Logger.h"
 #include "Window.h"
-
-#include <QMenu>
-#include <QMessageBox>
-#include <QCloseEvent>
 #include "DAO.h"
-
 #include "ClientHandler.h"
 #include "Settings.h"
 #include "qhttpserver.hpp"
 #include "qhttpserverrequest.hpp"
 #include "qhttpserverresponse.hpp"
+
+#include <QMenu>
+#include <QMessageBox>
+#include <QCloseEvent>
 
 Window::Window(QWidget* parent) :
     QWidget(parent)
@@ -34,7 +33,11 @@ Window::Window(QWidget* parent) :
     connect(_tray,      &QSystemTrayIcon::activated,    this, &Window::onTrayActivated);
 
     // redirect qdebug log to a text edit
-    Logger::setDevice(new TextEditToQIODeviceAdapter(ui.teLog, "./Log.txt", this));
+    LoggerAdapter* loggerAdapter = new LoggerAdapter;
+    loggerAdapter->addOutlet(new TextEditLoggerOutlet(ui.teLog));
+    loggerAdapter->addOutlet(new FileLoggerOutlet("Log.txt"));
+
+    Logger::setDevice(loggerAdapter);
     DAO::getInstance()->createTables();
 
     // Start the server
