@@ -18,6 +18,8 @@ public:
     void registration(const QString& userName, const QString& encryptedPassword,
                       const QString& firstName, const QString& lastName, const QString &email);
 
+    void changePassword(const QString& userName, const QString& encryptedOldPassword, const QString& encryptedNewPassword);
+
     void login(const QString& userName, const QString& encryptedPassword);
 
     void logout(const QString& userName);
@@ -57,8 +59,11 @@ public:
 
     bool isServerAlive() const;
 
+    static QString getEncrytedPassword(const QString& plainText);
+
 private slots:
     void onRegistrationReply    (QNetworkReply* reply);
+    void onChangePasswordReply  (QNetworkReply* reply);
     void onLoginReply           (QNetworkReply* reply);
     void onPingReply            (QNetworkReply* reply);
     void onQueryReply           (QNetworkReply* reply);
@@ -67,6 +72,7 @@ private slots:
 
 signals:
     void registrationReply  (bool successful);
+    void changePasswordReply(bool successful);
     void loginReply         (bool successful);
     void serverAlive        (bool alive);
 

@@ -67,10 +67,33 @@ void Connection::registration(const QString& userName,  const QString& encrypted
     manager->get(QNetworkRequest(QUrl(url)));
 }
 
+void Connection::changePassword(const QString &userName, const QString& encryptedOldPassword, const QString& encryptedNewPassword)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished   (QNetworkReply*)),
+            this,    SLOT  (onChangePasswordReply(QNetworkReply*)));
+    connect(manager, SIGNAL(finished(QNetworkReply*)), manager, SLOT(deleteLater()));
+
+    // Send request
+    QString url = tr("http://%1:%2/?action=changepassword&username=%3&oldpassword=%4&newpassword=%5")
+            .arg(_settings->getServerIP())
+            .arg(_settings->getServerPort())
+            .arg(userName)
+            .arg(encryptedOldPassword)
+            .arg(encryptedNewPassword);
+    manager->get(QNetworkRequest(QUrl(url)));
+}
+
 void Connection::onRegistrationReply(QNetworkReply* reply)
 {
     int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     emit registrationReply(status == 200);  // status code 200 means OK
+}
+
+void Connection::onChangePasswordReply(QNetworkReply *reply)
+{
+    int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    emit changePasswordReply(status == 200);  // status code 200 means OK
 }
 
 void Connection::login(const QString& userName, const QString& encryptedPassword)
@@ -436,4 +459,8 @@ void Connection::submitPhoto(const QString& filePath)
 
 bool Connection::isServerAlive() const {
     return _serverAlive;
+}
+
+QString Connection::getEncrytedPassword(const QString& plainText) {
+    return QCryptographicHash::hash(plainText.toUtf8(), QCryptographicHash::Md5);
 }

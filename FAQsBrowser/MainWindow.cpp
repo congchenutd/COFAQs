@@ -76,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui.actionNotHelpful,    SIGNAL(triggered()), this, SLOT(onNotHelpful()));
     connect(ui.actionPersonal,      SIGNAL(triggered()), this, SLOT(onPersonal()));
     connect(ui.actionQuit,          SIGNAL(triggered()), this, SLOT(onQuit()));
+    connect(ui.actionOptions,       SIGNAL(triggered()), this, SLOT(onOptions()));
 
     connect(ui.actionShowSearch,   SIGNAL(toggled(bool)), this, SLOT(onShowSearch  (bool)));
     connect(ui.actionZoomTextOnly, SIGNAL(toggled(bool)), this, SLOT(onZoomTextOnly(bool)));
@@ -304,6 +305,12 @@ void MainWindow::onQuit()
 {
     Connection::getInstance()->logout(_settings->getUserName());
     qApp->quit();
+}
+
+void MainWindow::onOptions()
+{
+    OptionsDlg dlg(this);
+    dlg.exec();
 }
 
 void MainWindow::onPersonal() {

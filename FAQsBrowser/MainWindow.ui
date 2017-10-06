@@ -36,7 +36,7 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="separator"/>
+    <addaction name="actionOptions"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -111,6 +111,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionQuit"/>
+   <addaction name="actionOptions"/>
    <addaction name="separator"/>
    <addaction name="actionDocPage"/>
    <addaction name="separator"/>
@@ -144,8 +145,8 @@
   </widget>
   <action name="actionExit">
    <property name="icon">
-    <iconset>
-     <normaloff>:/Images/Exit.png</normaloff>:/Images/Exit.png</iconset>
+    <iconset resource="Resource.qrc">
+     <normaloff>:/Images/Quit.png</normaloff>:/Images/Quit.png</iconset>
    </property>
    <property name="text">
     <string>E&amp;xit</string>
@@ -271,6 +272,15 @@
    </property>
    <property name="text">
     <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/Images/Options.png</normaloff>:/Images/Options.png</iconset>
+   </property>
+   <property name="text">
+    <string>Options</string>
    </property>
   </action>
  </widget>

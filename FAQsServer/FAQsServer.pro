@@ -30,7 +30,9 @@ SOURCES = \
     Settings.cpp \
     ClientHandler.cpp \
     Window.cpp \
-    Logger.cpp
+    Logger.cpp \
+    Clustering.cpp \
+    Cluster.cpp
 HEADERS = \
     DAO.h \
     SimilarityComparer.h \
@@ -39,7 +41,9 @@ HEADERS = \
     Settings.h \
     ClientHandler.h \
     Window.h \
-    Logger.h
+    Logger.h \
+    Clustering.h \
+    Cluster.h
 
 FORMS += \
     Window.ui

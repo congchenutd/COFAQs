@@ -37,6 +37,8 @@ ClientHandler::ClientHandler(QHttpRequest* req, QHttpResponse* res)
         QString action = params["action"];
         if (action == "registration")
             onRegistration(params, res);
+        else if(action == "changepassword")
+            onChangePassword(params, res);
         else if(action == "ping")
             onPing(params, res);
         else if (action == "login")
@@ -117,6 +119,32 @@ void ClientHandler::onRegistration(const Parameters& params, QHttpResponse* res)
         res->addHeader("Content-Type", "text/html");
         res->setStatusCode(qhttp::ESTATUS_BAD_REQUEST);
         res->write(tr("The username %1 already exists!").arg(userName).toUtf8());
+        res->end();
+    }
+}
+
+void ClientHandler::onChangePassword(const ClientHandler::Parameters &params, QHttpResponse *res)
+{
+    QString userName = params["username"];
+
+    bool result = _dao->changePassword(
+            userName,
+            params["oldpassword"],
+            params["newpassword"]
+            );
+
+    if (result)
+    {
+        res->addHeader("Content-Type", "text/html");
+        res->setStatusCode(qhttp::ESTATUS_OK);
+        res->write(tr("Password of user account %1 is successfully changed.").arg(userName).toUtf8());
+        res->end();
+    }
+    else
+    {
+        res->addHeader("Content-Type", "text/html");
+        res->setStatusCode(qhttp::ESTATUS_BAD_REQUEST);
+        res->write(tr("Changing password of user account %1 failed!").arg(userName).toUtf8());
         res->end();
     }
 }

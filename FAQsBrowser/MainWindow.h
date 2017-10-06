@@ -49,6 +49,7 @@ private slots:
     void onTimer();
     void onServerAlive(bool serverAlive);
     void onQuit();
+    void onOptions();
 
 private:
     WebView* currentWebView() const;

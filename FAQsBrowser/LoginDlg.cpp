@@ -39,7 +39,7 @@ QString LoginDlg::getUserName() const {
 }
 
 QString LoginDlg::getEncrytedPassword() const {
-    return QCryptographicHash::hash(ui.lePassword->text().toUtf8(), QCryptographicHash::Md5);
+    return Connection::getEncrytedPassword(ui.lePassword->text());
 }
 
 void LoginDlg::closeEvent(QCloseEvent*) {

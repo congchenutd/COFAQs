@@ -7,6 +7,7 @@
 class QJsonDocument;
 class SimilarityComparer;
 class QSqlQuery;
+struct SimilarityResult;
 
 // 读写数据库的DAO
 class DAO : public QObject
@@ -20,6 +21,8 @@ public:
 
     bool registration(const QString& userName, const QString& password,
                       const QString& firstName, const QString& lastName, const QString& email);
+
+    bool changePassword(const QString& userName, const QString& oldPassword, const QString& newPassword);
 
     bool login(const QString& userName, const QString& password);
 
@@ -60,6 +63,10 @@ public:
     // query personal profile
     QJsonDocument queryUserProfile(const QString& userName) const;
 
+    void updateSentenceSimilarity(const SimilarityResult& similarityResult);
+
+    double getSentenceSimilarity(const QString& sentence1, const QString& sentence2);
+
 private slots:
     void onComparisonResult(const QString& leadQuestion,
                             const QString& question, qreal similarity);
@@ -94,11 +101,11 @@ private:
     QString getCurrentDateTime() const;
     QString getDateTimeFormat() const;
 
-    void executeQuery(QSqlQuery& query, const QString& content = QString()) const;
+    bool executeQuery(QSqlQuery& query, const QString& content = QString()) const;
 
 private:
     static DAO*         _instance;
-    SimilarityComparer* _comparer;
+//    SimilarityComparer* _comparer;
     Logger*             _logger;
 };
 

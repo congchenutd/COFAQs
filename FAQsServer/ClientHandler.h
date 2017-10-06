@@ -20,6 +20,7 @@ public:
 private:
     Parameters parseParameters(const QString& url) const;
     void onRegistration     (const Parameters& params, QHttpResponse* res);
+    void onChangePassword   (const Parameters& params, QHttpResponse* res);
     void onPing             (const Parameters& params, QHttpResponse* res);
     void onLogin            (const Parameters& params, QHttpResponse* res);
     void onLogout           (const Parameters& params, QHttpResponse* res);

@@ -1,6 +1,7 @@
 ﻿#include "DAO.h"
 #include "SimilarityComparer.h"
 #include "Settings.h"
+#include "SimilarityComparer.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -102,10 +103,17 @@ void DAO::createTables()
 
     executeQuery(query,
                  "create table if not exists UserLogin ( \
-                 UserID   int references Users        (ID) on delete cascade on update cascade, \
+                 UserID   int references Users (ID) on delete cascade on update cascade, \
                  InOut    int, \
                  Time     varchar, \
                  primary key (UserID, Time))");
+
+    executeQuery(query,
+                "create table if not exists SentenceSimilarity ( \
+                 Sentence1  varchar, \
+                 Sentence2  varchar, \
+                 Similarity double, \
+                 primary key (Sentence1, Sentence2))");
 }
 
 DAO::DAO()
@@ -115,9 +123,9 @@ DAO::DAO()
     database.setDatabaseName("FAQs.db");
     database.open();
 
-    _comparer = new SimilarityComparer(this);
-    connect(_comparer, SIGNAL(comparisonResult  (QString,QString,qreal)),
-            this,      SLOT  (onComparisonResult(QString,QString,qreal)));
+//    _comparer = new SimilarityComparer;
+//    connect(_comparer, SIGNAL(comparisonResult  (QString,QString,qreal)),
+//            this,      SLOT  (onComparisonResult(QString,QString,qreal)));
 }
 
 /**
@@ -128,7 +136,7 @@ int DAO::getNextID(const QString& tableName) const
     if(tableName.isEmpty())
         return 0;
     QSqlQuery query;
-    executeQuery(query,tr("select max(ID) from %1").arg(tableName));
+    executeQuery(query, tr("select max(ID) from %1").arg(tableName));
     return query.next() ? query.value(0).toInt() + 1 : 0;
 }
 
@@ -328,10 +336,44 @@ bool DAO::registration(const QString& userName, const QString& password,
     query.bindValue(":firstName",   firstName);
     query.bindValue(":lastName",    lastName);
     query.bindValue(":email",       email);
-    executeQuery(query);
+    if (executeQuery(query))
+    {
+        *_logger << userName << firstName << lastName << email << "is registered." << endl;
+        return true;
+    }
+    return false;
+}
 
-    *_logger << userName << firstName << lastName << email << "is registered." << endl;
-    return true;
+bool DAO::changePassword(const QString& userName, const QString& oldPassword, const QString& newPassword)
+{
+    int userID = getUserID(userName);
+    if (userID < 0)    // username doesn't exist
+    {
+        *_logger << userName << "change password failed. Reason: user account doesn't exist." << endl;
+        return false;
+    }
+
+    QSqlQuery query;
+    executeQuery(query, tr("select Password from Users where ID = %1").arg(userID));
+    if (query.next())
+    {
+        QString storedPassword = query.value(0).toString();
+        if (storedPassword != oldPassword)
+        {
+            *_logger << userName << "change password failed. Reason: wrong old password." << endl;
+            return false;
+        }
+        query.prepare("update Users set Password = :NewPassword where ID = :id");
+        query.bindValue(":id",          userID);
+        query.bindValue(":NewPassword", newPassword);
+
+        if (executeQuery(query))
+        {
+            *_logger << userName << "changed his/her password." << endl;
+            return true;
+        }
+    }
+    return false;
 }
 
 // TODO: return error message
@@ -615,7 +657,7 @@ QString DAO::getDateTimeFormat() const {
     return "yyyy-MM-dd hh:mm:ss";
 }
 
-void DAO::executeQuery(QSqlQuery& query, const QString& content) const
+bool DAO::executeQuery(QSqlQuery& query, const QString& content) const
 {
     if (content.isEmpty())
         query.exec();
@@ -624,6 +666,8 @@ void DAO::executeQuery(QSqlQuery& query, const QString& content) const
 
     if (query.lastError().isValid())
         *_logger << "Database error:" << query.lastError() << endl;
+
+    return !query.lastError().isValid();
 }
 
 // An example of returned JSON array:
@@ -892,4 +936,38 @@ QJsonDocument DAO::queryUserProfile(const QString& userName) const
 
     *_logger << "Query user profile: " << userName << endl;
     return QJsonDocument(profileJson);
+}
+
+void DAO::updateSentenceSimilarity(const SimilarityResult& similarityResult)
+{
+    QString sentence1 = qMin(similarityResult._sentence1, similarityResult._sentence2);
+    QString sentence2 = qMax(similarityResult._sentence1, similarityResult._sentence2);
+
+    QSqlQuery query;
+
+    double similarity = getSentenceSimilarity(sentence1, sentence2);
+    if(similarity > -1) {
+        query.prepare("update SentenceSimilarity set Similarity = :Similarity \
+                       where Sentence1 = :Sentence1 and Sentence2 = :Sentence2");
+    }
+    else {
+        query.prepare("insert into SentenceSimilarity values (:Sentence1, :Sentence2, :Similarity)");
+    }
+    query.bindValue(":Similarity",  similarityResult._similarity);
+    query.bindValue(":Sentence1",   sentence1);
+    query.bindValue(":Sentence2",   sentence2);
+    executeQuery(query);
+}
+
+double DAO::getSentenceSimilarity(const QString& sentence1, const QString& sentence2)
+{
+    QString s1 = qMin(sentence1, sentence2);
+    QString s2 = qMax(sentence1, sentence2);
+    QSqlQuery query;
+    query.prepare("select Similarity from SentenceSimilarity \
+                   where Sentence1 = :Sentence1 and Sentence2 = :Sentence2");
+    query.bindValue(":Sentence1", s1);
+    query.bindValue(":Sentence2", s2);
+    executeQuery(query);
+    return query.next() ? query.value(0).toDouble() : -1;
 }

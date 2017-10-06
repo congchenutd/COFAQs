@@ -17,6 +17,11 @@ private slots:
     void onPingServer();
     void onServerAlive(bool alive);
     void onFont();
+    void onChangePassword();
+    void onChangePasswordResult(bool successful);
+
+private:
+    void showMessage(const QString& message);
 
 private:
     Ui::OptionsDlg ui;
